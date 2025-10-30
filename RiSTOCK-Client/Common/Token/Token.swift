@@ -1,0 +1,216 @@
+//
+//  Token.swift
+//  RiSTOCK
+//
+//  Created by Rico Tandrio on 19/10/25.
+//
+
+import Foundation
+import UIKit
+
+// MARK: --- Primary Colors ---
+enum Token {
+    @ColorElement(light: UIColor.from("#E9F0F9"), dark: UIColor.from("#E9F0F9"))
+    static var primary50: UIColor
+    
+    @ColorElement(light: UIColor.from("#BBD1ED"), dark: UIColor.from("#BBD1ED"))
+    static var primary100: UIColor
+    
+    @ColorElement(light: UIColor.from("#9BAAE5"), dark: UIColor.from("#9BAAE5"))
+    static var primary200: UIColor
+    
+    @ColorElement(light: UIColor.from("#6C8B9D"), dark: UIColor.from("#6C8B9D"))
+    static var primary300: UIColor
+    
+    @ColorElement(light: UIColor.from("#5087A1"), dark: UIColor.from("#5087A1"))
+    static var primary400: UIColor
+    
+    @ColorElement(light: UIColor.from("#2469C6"), dark: UIColor.from("#2469C6"))
+    static var primary500: UIColor
+    
+    @ColorElement(light: UIColor.from("#2160C4"), dark: UIColor.from("#2160C4"))
+    static var primary600: UIColor
+    
+    @ColorElement(light: UIColor.from("#1A4B8D"), dark: UIColor.from("#1A4B8D"))
+    static var primary700: UIColor
+    
+    @ColorElement(light: UIColor.from("#143A6D"), dark: UIColor.from("#143A6D"))
+    static var primary800: UIColor
+    
+    @ColorElement(light: UIColor.from("#012C53"), dark: UIColor.from("#012C53"))
+    static var primary900: UIColor
+}
+
+// MARK: --- Accent Colors ---
+extension Token {
+    @ColorElement(light: UIColor.from("#E9FEF6"), dark: UIColor.from("#E9FEF6"))
+    static var accent50: UIColor
+    
+    @ColorElement(light: UIColor.from("#BBDFBE"), dark: UIColor.from("#BBDFBE"))
+    static var accent100: UIColor
+    
+    @ColorElement(light: UIColor.from("#9AF9D7"), dark: UIColor.from("#9AF9D7"))
+    static var accent200: UIColor
+    
+    @ColorElement(light: UIColor.from("#6C7C4C"), dark: UIColor.from("#6C7C4C"))
+    static var accent300: UIColor
+    
+    @ColorElement(light: UIColor.from("#4F5FB9"), dark: UIColor.from("#4F5FB9"))
+    static var accent400: UIColor
+    
+    @ColorElement(light: UIColor.from("#23F3A7"), dark: UIColor.from("#23F3A7"))
+    static var accent500: UIColor
+    
+    @ColorElement(light: UIColor.from("#20DD56"), dark: UIColor.from("#20DD56"))
+    static var accent600: UIColor
+    
+    @ColorElement(light: UIColor.from("#19AD77"), dark: UIColor.from("#19AD77"))
+    static var accent700: UIColor
+    
+    @ColorElement(light: UIColor.from("#13865C"), dark: UIColor.from("#13865C"))
+    static var accent800: UIColor
+    
+    @ColorElement(light: UIColor.from("#0F6646"), dark: UIColor.from("#0F6646"))
+    static var accent900: UIColor
+}
+
+// MARK: --- Black & White Colors ---
+extension Token {
+    @ColorElement(light: UIColor.from("#FDFDFD"), dark: UIColor.from("#FFFFFF"))
+    static var white: UIColor
+    
+    @ColorElement(light: UIColor.from("#161616"), dark: UIColor.from("#161616"))
+    static var black: UIColor
+}
+
+// MARK: - Warning Colors
+extension Token {
+    @ColorElement(light: UIColor.from("#FFF9E6"), dark: UIColor.from("#FFF9E6"))
+    static var warning50: UIColor
+    
+    @ColorElement(light: UIColor.from("#FFECB2"), dark: UIColor.from("#FFECB2"))
+    static var warning100: UIColor
+    
+    @ColorElement(light: UIColor.from("#FFE28D"), dark: UIColor.from("#FFE28D"))
+    static var warning200: UIColor
+    
+    @ColorElement(light: UIColor.from("#FED559"), dark: UIColor.from("#FED559"))
+    static var warning300: UIColor
+    
+    @ColorElement(light: UIColor.from("#FECD39"), dark: UIColor.from("#FECD39"))
+    static var warning400: UIColor
+    
+    @ColorElement(light: UIColor.from("#FEC107"), dark: UIColor.from("#FEC107"))
+    static var warning500: UIColor
+    
+    @ColorElement(light: UIColor.from("#E7B006"), dark: UIColor.from("#E7B006"))
+    static var warning600: UIColor
+    
+    @ColorElement(light: UIColor.from("#B48905"), dark: UIColor.from("#B48905"))
+    static var warning700: UIColor
+    
+    @ColorElement(light: UIColor.from("#8C6A04"), dark: UIColor.from("#8C6A04"))
+    static var warning800: UIColor
+    
+    @ColorElement(light: UIColor.from("#6B5103"), dark: UIColor.from("#6B5103"))
+    static var warning900: UIColor
+}
+
+// MARK: - Success Colors
+extension Token {
+    @ColorElement(light: UIColor.from("#EDF7EE"), dark: UIColor.from("#EDF7EE"))
+    static var success50: UIColor
+    
+    @ColorElement(light: UIColor.from("#C8E7C9"), dark: UIColor.from("#C8E7C9"))
+    static var success100: UIColor
+    
+    @ColorElement(light: UIColor.from("#ADDBAF"), dark: UIColor.from("#ADDBAF"))
+    static var success200: UIColor
+    
+    @ColorElement(light: UIColor.from("#87CA8A"), dark: UIColor.from("#87CA8A"))
+    static var success300: UIColor
+    
+    @ColorElement(light: UIColor.from("#70C073"), dark: UIColor.from("#70C073"))
+    static var success400: UIColor
+    
+    @ColorElement(light: UIColor.from("#4CB050"), dark: UIColor.from("#4CB050"))
+    static var success500: UIColor
+    
+    @ColorElement(light: UIColor.from("#45A049"), dark: UIColor.from("#45A049"))
+    static var success600: UIColor
+    
+    @ColorElement(light: UIColor.from("#367D39"), dark: UIColor.from("#367D39"))
+    static var success700: UIColor
+    
+    @ColorElement(light: UIColor.from("#2A612C"), dark: UIColor.from("#2A612C"))
+    static var success800: UIColor
+    
+    @ColorElement(light: UIColor.from("#204A22"), dark: UIColor.from("#204A22"))
+    static var success900: UIColor
+}
+
+// MARK: - Error Colors
+extension Token {
+    @ColorElement(light: UIColor.from("#FEECEB"), dark: UIColor.from("#FEECEB"))
+    static var error50: UIColor
+    
+    @ColorElement(light: UIColor.from("#FCC5C1"), dark: UIColor.from("#FCC5C1"))
+    static var error100: UIColor
+    
+    @ColorElement(light: UIColor.from("#FAA9A3"), dark: UIColor.from("#FAA9A3"))
+    static var error200: UIColor
+    
+    @ColorElement(light: UIColor.from("#F88179"), dark: UIColor.from("#F88179"))
+    static var error300: UIColor
+    
+    @ColorElement(light: UIColor.from("#F7695F"), dark: UIColor.from("#F7695F"))
+    static var error400: UIColor
+    
+    @ColorElement(light: UIColor.from("#F54337"), dark: UIColor.from("#F54337"))
+    static var error500: UIColor
+    
+    @ColorElement(light: UIColor.from("#DF3D32"), dark: UIColor.from("#DF3D32"))
+    static var error600: UIColor
+    
+    @ColorElement(light: UIColor.from("#AE3027"), dark: UIColor.from("#AE3027"))
+    static var error700: UIColor
+    
+    @ColorElement(light: UIColor.from("#87251E"), dark: UIColor.from("#87251E"))
+    static var error800: UIColor
+    
+    @ColorElement(light: UIColor.from("#671C17"), dark: UIColor.from("#671C17"))
+    static var error900: UIColor
+}
+
+// MARK: - Gray Colors
+extension Token {
+    @ColorElement(light: UIColor.from("#F0F1F2"), dark: UIColor.from("#F0F1F2"))
+    static var gray50: UIColor
+    
+    @ColorElement(light: UIColor.from("#D1D4D8"), dark: UIColor.from("#D1D4D8"))
+    static var gray100: UIColor
+    
+    @ColorElement(light: UIColor.from("#BBBFc5"), dark: UIColor.from("#BBBFc5"))
+    static var gray200: UIColor
+    
+    @ColorElement(light: UIColor.from("#9DA1AA"), dark: UIColor.from("#9DA1AA"))
+    static var gray300: UIColor
+    
+    @ColorElement(light: UIColor.from("#898F99"), dark: UIColor.from("#898F99"))
+    static var gray400: UIColor
+    
+    @ColorElement(light: UIColor.from("#6C7380"), dark: UIColor.from("#6C7380"))
+    static var gray500: UIColor
+    
+    @ColorElement(light: UIColor.from("#626974"), dark: UIColor.from("#626974"))
+    static var gray600: UIColor
+    
+    @ColorElement(light: UIColor.from("#4D525B"), dark: UIColor.from("#4D525B"))
+    static var gray700: UIColor
+    
+    @ColorElement(light: UIColor.from("#3B3F46"), dark: UIColor.from("#3B3F46"))
+    static var gray800: UIColor
+    
+    @ColorElement(light: UIColor.from("#2D3036"), dark: UIColor.from("#2D3036"))
+    static var gray900: UIColor
+}
