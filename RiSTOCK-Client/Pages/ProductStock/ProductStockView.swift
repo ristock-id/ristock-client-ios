@@ -19,13 +19,16 @@ struct ProductStockView: View {
                     .padding()
             } else {
                 VStack {
-                    ForEach(viewModel.products) { product in
+                    ForEach(viewModel.products.indices, id: \.self) { index in
                         HStack {
-                            Text(product.name)
+                            Text(viewModel.products[index].name)
                                 .font(.headline)
                             Spacer()
-                            Text("Stock: \(String(describing: product.stockStatus?.rawValue))")
-                                .font(.subheadline)
+                            
+                            StockStatusMenu(
+                                product: $viewModel.products[index],
+                                fetchStatusUpdate: viewModel.fetchUpdateStockStatus
+                            )
                         }
                         .padding()
                         Divider()
