@@ -415,7 +415,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "RiSTOCK-Client/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "RiSTOCK Client";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access required to scan barcodes";
+				INFOPLIST_KEY_NSCameraUsageDescription = "RiSTOCK uses the camera to scan a client ID from your Mac to securely connect and sync data between devices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -455,7 +455,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "RiSTOCK-Client/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "RiSTOCK Client";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access required to scan barcodes";
+				INFOPLIST_KEY_NSCameraUsageDescription = "RiSTOCK uses the camera to scan a client ID from your Mac to securely connect and sync data between devices.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
