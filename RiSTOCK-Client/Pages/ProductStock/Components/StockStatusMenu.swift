@@ -15,14 +15,24 @@ struct StockStatusMenu: View {
     
     @State private var isPopoverPresented = false // State to manage popover visibility
     
+    @Binding var isHovered: Bool
+    
     var body: some View {
         // The Tag itself acts as the button trigger
         Button {
             isPopoverPresented.toggle()
         } label: {
             StockStatusTag(
-                status: product.stockStatus,
-                isPresented: $isPopoverPresented
+                status: {
+                    if let analysisUpdatedAt = product.analysisUpdatedAt {
+                        if product.stockStatus != nil && product.lastUpdated < analysisUpdatedAt {
+                            return nil
+                        }
+                    }
+                    return product.stockStatus
+                }(),
+                isPresented: $isPopoverPresented,
+                isHovered: $isHovered
             )
         }
         .buttonStyle(.plain)
@@ -34,6 +44,7 @@ struct StockStatusMenu: View {
                         selectedStatus,
                         {
                             product.stockStatus = selectedStatus
+                            product.lastUpdated = Date()
                         }
                     )
                 },
@@ -49,29 +60,31 @@ struct StockStatusMenu: View {
 private struct StockStatusTag: View {
     let status: StockStatus?
     @Binding var isPresented: Bool
+    @Binding var isHovered: Bool
     
     var body: some View {
-        HStack(spacing: 4) {
-            Text(status?.rawValue ?? "Status Stok")
+        HStack(spacing: 10) {
+            Text(status?.rawValue ?? "Update Stock")
                 .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor)
+                .lineLimit(1)
             
             Image(systemName: "chevron.down")
                 .resizable()
                 .frame(width: 12, height: 6)
                 .aspectRatio(contentMode: .fit)
-                .foregroundStyle(Color.gray)
+                .foregroundStyle(status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor)
                 .rotationEffect(.degrees(isPresented ? 180 : 0))
                 .animation(.easeInOut, value: isPresented)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray)
+                    .fill(status?.backgroundColor.swiftUIColor ?? Token.gray50.swiftUIColor)
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.black, lineWidth: 1)
-                
+                    .stroke(isHovered ? status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor : Token.transparent.swiftUIColor, lineWidth: 1)
             }
         )
         .contentShape(RoundedRectangle(cornerRadius: 8))
@@ -93,7 +106,7 @@ private struct StatusSelectionList: View {
                     isPresented = false
                 } label: {
                     HStack {
-                        Image(systemName: "circle.fill")
+                        Image(uiImage: RiSTOCKIcon.circleEmpty.image)
                             .resizable()
                             .frame(width: 25, height: 25)
                             .padding(.trailing, 5)

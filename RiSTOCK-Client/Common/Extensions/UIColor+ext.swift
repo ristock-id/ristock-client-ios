@@ -53,4 +53,9 @@ extension UIColor {
     func toColor() -> Color {
         Color(self)
     }
+    
+    /// Convert UIColor to SwiftUI Color
+    var swiftUIColor: Color {
+        return Color(self)
+    }
 }

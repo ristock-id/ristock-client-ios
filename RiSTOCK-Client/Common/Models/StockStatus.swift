@@ -1,0 +1,41 @@
+import Foundation
+import SwiftUI
+
+enum StockStatus: String, CaseIterable {
+    case safe = "Aman"
+    case low = "Menipis"
+    case out = "Habis"
+    
+    var accentColor: UIColor {
+        switch self {
+        case .safe:
+            return Token.success700
+        case .low:
+            return Token.warning800
+        case .out:
+            return Token.error600
+        }
+    }
+    
+    var backgroundColor: UIColor {
+        switch self {
+        case .safe:
+            return Token.success50
+        case .low:
+            return Token.warning50
+        case .out:
+            return Token.error50
+        }
+    }
+    
+    var filterString: String {
+        switch self {
+        case .safe:
+            return "aman"
+        case .low:
+            return "menipis"
+        case .out:
+            return "habis"
+        }
+    }
+}

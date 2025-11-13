@@ -134,8 +134,8 @@ struct ProductInsightResponse: JSONDecodable {
         case "Low":
             return .periodically
         default:
-            print("[WARNING] Unmapped action string: \(action)")
-            return .unmapped
+            print("[WARNING] Unmapped action string: \(action == "" ? "empty" : action)")
+            return .periodically
         }
     }
     
@@ -182,44 +182,4 @@ struct ProductInsightResponse: JSONDecodable {
         return p
     }
     
-}
-
-enum SalesCondition: String, CaseIterable {
-    case normal = "Normal"
-    case notNormal = "Tidak Normal"
-    case unknown = "Tidak Diketahui"
-    
-    var infoText: String {
-        switch self {
-        case .normal:
-            return "Penjualan produk berjalan sesuai pola."
-        case .notNormal:
-            return "Lonjakan ekstrem dari periode sebelumnya."
-        case .unknown:
-            return "Status penjualan produk tidak diketahui."
-        }
-    }
-}
-
-struct DailySale: Identifiable {
-    let id: UUID = UUID()
-    let dateString: String
-    let amount: Int
-    let date: Date
-    
-    var primitivePlottable: String {
-        dateString
-    }
-    
-    init?(primitivePlottable: String) {
-        return nil
-    }
-    
-    init(dateString: String, amount: Int) {
-        self.dateString = dateString
-        self.amount = amount
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        self.date = formatter.date(from: dateString) ?? .now
-    }
 }

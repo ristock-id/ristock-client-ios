@@ -63,17 +63,40 @@ final class NetworkService: NetworkServiceProtocol {
         body: JSONEncodable? = nil,
         completion: @escaping (Result<T, NetworkServiceError>) -> Void
     ) -> URLSessionDataTask? {
-        guard let url: URL = URL(string: urlString) else {
-            completion(.failure(.invalidURL))
-            return nil
-        }
-        
         guard urlString.hasPrefix(APIConfig.baseURL) else {
             completion(.failure(.invalidURL))
             return nil
         }
         
-        var request = URLRequest(url: url)
+        guard var components = URLComponents(string: urlString) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+        
+        if !parameters.isEmpty {
+            var queryItems: [URLQueryItem] = []
+            
+            for (key, value) in parameters {
+                if let arrayValue = value as? [Any] {
+                    // If the value is an array, loop over it and add each item separately
+                    for item in arrayValue {
+                        queryItems.append(URLQueryItem(name: key, value: String(describing: item)))
+                    }
+                } else {
+                    // Otherwise, just add the single key/value
+                    queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+                }
+            }
+            
+            components.queryItems = queryItems
+        }
+        
+        guard let finalURL = components.url else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+            
+        var request = URLRequest(url: finalURL)
         request.httpMethod = method.rawValue
         request.allHTTPHeaderFields = headers
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -98,7 +121,7 @@ final class NetworkService: NetworkServiceProtocol {
                     completeOnMain(.failure(.noInternetConnection), completion)
                     return
                 }
-                assertionFailure("Request Failed")
+//                assertionFailure("Request Failed")
                 completeOnMain(.failure(.requestFailed(error)), completion)
                 return
             }
@@ -151,7 +174,7 @@ final class NetworkService: NetworkServiceProtocol {
                     return
                 }
             } catch {
-                assertionFailure("Decoding has Failed with Error: \(error)")
+//                assertionFailure("Decoding has Failed with Error: \(error)")
                 completeOnMain(.failure(.decodingFailed(error)), completion)
             }
         }

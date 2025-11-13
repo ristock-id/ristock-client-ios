@@ -8,7 +8,28 @@
 import Foundation
 
 enum APIConfig {
-    static let baseURL = "https://ristock-be-main-jszuzedd7a-et.a.run.app/v1"
+    static let baseURL: String = {
+        guard let baseString = Secrets.shared.string(forKey: "API_BASE_URL"),
+              let apiVersion = Secrets.shared.string(forKey: "API_VERSION"),
+              !baseString.isEmpty,
+              !apiVersion.isEmpty else {
+            
+            fatalError("[ERROR] API_BASE_URL or API_VERSION missing from Secrets.plist")
+        }
+        
+        guard let baseURL = URL(string: baseString) else {
+            fatalError("[ERROR] API_BASE_URL in Secrets.plist is not a valid URL: \(baseString)")
+        }
+        
+        let versionedURL = baseURL.appendingPathComponent(apiVersion)
+        
+        // TODO: Refactor this to Return URL instead of String
+        if !versionedURL.absoluteString.hasSuffix("/") {
+            return versionedURL.appendingPathComponent("") .absoluteString
+        } else {
+            return versionedURL.absoluteString
+        }
+    }()
 }
 
 protocol EndpointProtocol {

@@ -1,4 +1,3 @@
-
 //
 //  UpdateProductStatusResponse.swift
 //  RiSTOCK

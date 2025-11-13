@@ -217,3 +217,9 @@ extension Token {
     @ColorElement(light: UIColor.from("#2D3036"), dark: UIColor.from("#2D3036"))
     static var gray900: UIColor
 }
+
+// MARK: - Transparent
+extension Token {
+    @ColorElement(color: UIColor.clear)
+    static var transparent: UIColor
+}

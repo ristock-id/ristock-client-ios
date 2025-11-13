@@ -24,13 +24,49 @@ extension String {
         return displayFormatter.string(from: date)
     }
     
-    func toDate() -> Date {
+    /// Converts an ISO8601-like date string into a `Date` object,
+    /// assuming `Asia/Jakarta` as the default timezone.
+    ///
+    /// - Parameters:
+    ///   - gmt: When `true`, parses as GMT (UTC); otherwise, uses Asia/Jakarta.
+    ///   - setTimeTo: Optional time string (`"HH:mm:ss"`) to override the parsed time.
+    /// - Returns: A `Date` parsed from the string, adjusted if needed.
+    func toDate(gmt: Bool = false, setTimeTo timeString: String? = nil) -> Date {
+        guard let jakartaTimeZone = TimeZone(identifier: "Asia/Jakarta") else {
+            return Date()
+        }
+        
+        guard let gmtTimeZone = TimeZone(secondsFromGMT: 0) else {
+            return Date()
+        }
+        
+        // Base date formatter for ISO-like strings
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.timeZone = gmt ? gmtTimeZone : jakartaTimeZone
         
-        return formatter.date(from: self) ?? Date()
+        guard var date = formatter.date(from: self) else {
+            return Date()
+        }
+        
+        // If a custom time override is provided (e.g. "23:59:59")
+        if let timeString = timeString {
+            let timeParts = timeString.split(separator: ":").compactMap { Int($0) }
+            if timeParts.count == 3 {
+                var calendar = Calendar(identifier: .gregorian)
+                calendar.timeZone = gmt ? gmtTimeZone : jakartaTimeZone
+                
+                var components = calendar.dateComponents([.year, .month, .day], from: date)
+                components.hour = timeParts[0]
+                components.minute = timeParts[1]
+                components.second = timeParts[2]
+                
+                date = calendar.date(from: components) ?? date
+            }
+        }
+        
+        return date
     }
     
     func toDisplayFormat(from inputFormat: String, to outputFormat: String) -> String {
@@ -49,6 +85,13 @@ extension String {
         }
     }
     
+    /// Converts the string representing a number into a currency formatted string.
+    ///
+    /// - Parameters:
+    ///  - localeIdentifier: The locale identifier for formatting (default is "id_ID").
+    ///  - currencyCode: The currency code (default is "IDR").
+    ///  - withCurrencySymbol: Whether to include the currency symbol (default is `false`).
+    /// - Returns: A formatted currency string.
     func toCurrencyFormat(
         localeIdentifier: String = "id_ID",
         currencyCode: String = "IDR",

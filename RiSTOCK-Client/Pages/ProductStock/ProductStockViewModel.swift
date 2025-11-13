@@ -5,6 +5,7 @@
 //  Created by Rico Tandrio on 19/10/25.
 //
 
+
 import Foundation
 import Combine
 import SwiftUI
@@ -35,82 +36,228 @@ enum ErrorProductStockView {
 }
 
 class ProductStockViewModel: ObservableObject {
+    
+    // MARK: - Filters
+    // These properties now trigger a new API call.
+    @Published var selectedCheckRecommendationFilter: Set<CheckRecommendationStatus> = [] {
+        didSet { resetPageAndFetch() }
+    }
+    
+    @Published var selectedStockStatusFilter: Set<StockStatus> = [] {
+        didSet { resetPageAndFetch() }
+    }
+    
+    @Published var searchText: String = ""
+    
+    @Published var startDateFilter: Date? = nil {
+        didSet { resetPageAndFetch() }
+    }
+    
+    @Published var endDateFilter: Date? = nil {
+        didSet { resetPageAndFetch() }
+    }
 
-    @Published var products: [Product] = [] {
+    // MARK: - Pagination
+    // These properties also trigger a new API call.
+    @Published var selectedPageSize = 20 {
+        didSet { fetchProducts() }
+    }
+    
+    @Published var currentPage = 1 {
+        didSet { fetchProducts() }
+    }
+    
+    @Published var totalPages = 1
+    
+    // MARK: - Data Properties
+    // This is now the single source of truth for the UI, populated directly by the API.
+    @Published var products: [Product] = []
+    
+    @Published var selectedProduct: Product? = nil {
         didSet {
-            self.countProducts = products.count
+            // Update the product in the 'products' list
+            if let selectedProduct = selectedProduct {
+                if let index = products.firstIndex(where: { $0.id == selectedProduct.id }) {
+                    products[index] = selectedProduct
+                }
+            }
         }
     }
     
-    @Published var countProducts: Int = 0
-    
-    @Published var filteredProducts: [Product] = []
-
+    // MARK: - UI State Properties
+    @Published var totalProducts: Int = 0 // Renamed from countProducts
     @Published var isLoading: Bool = false
-
     @Published var countCheckNow: CheckCount = CheckCount()
     @Published var countCheckSoon: CheckCount = CheckCount()
     @Published var countCheckPeriodically: CheckCount = CheckCount()
-
+    @Published var dateJustFiltered: Bool = false // This might be handled differently now
     @Published var errorProductStockView: ErrorProductStockView? = nil
+    @Published var validTill: Date? = nil
     
+    @Published var startDate: Date = Date.distantPast
+    @Published var endDate: Date = Date.distantFuture
+    
+    // MARK: - Private Properties
     private let deviceId: String
-    
     private var pipelineFetcher: PipelineFetcherProtocol
-    
+    private var cancellables: Set<AnyCancellable> = []
+
+    // MARK: - Init
     init(pipelineFetcher: PipelineFetcherProtocol = PipelineFetcher(), deviceId: String) {
         self.pipelineFetcher = pipelineFetcher
         self.deviceId = deviceId
         
+        // Debounce search text, then trigger an API fetch
+        $searchText
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.resetPageAndFetch()
+            }
+            .store(in: &cancellables)
+        
         fetchProducts()
     }
     
-    private func countProductsByCheckRecommendation() {
-        let nowProducts = self.products.filter { $0.checkRecommendation == .now }
-        self.countCheckNow.total = nowProducts.count
-        self.countCheckNow.updated = nowProducts.filter { $0.stockStatus != nil }.count
-        
-        let soonProducts = self.products.filter { $0.checkRecommendation == .soon }
-        self.countCheckSoon.total = soonProducts.count
-        self.countCheckSoon.updated = soonProducts.filter { $0.stockStatus != nil }.count
+    // MARK: - Filtering
+    
+    // This function is called when a filter changes.
+    // It resets the page to 1 and fetches new data.
+    private func resetPageAndFetch() {
+        // Only fetch if the page is not already 1.
+        // If it is 1, the `didSet` for `currentPage` will call fetchProducts().
+        if currentPage == 1 {
+            fetchProducts()
+        } else {
+            currentPage = 1 // This will trigger fetchProducts() via its didSet
+        }
+    }
+    
+    // MARK: - Public Functions
+    
+    private func clearFilters() {
+        self.selectedStockStatusFilter = []
+        self.selectedCheckRecommendationFilter = []
+        self.startDateFilter = nil
+        self.endDateFilter = nil
+        self.searchText = ""
+        // Calling resetPageAndFetch() is not needed here,
+        // as changing the properties above will trigger it.
+    }
 
-        let periodicallyProducts = self.products.filter { $0.checkRecommendation == .periodically }
-        self.countCheckPeriodically.total = periodicallyProducts.count
-        self.countCheckPeriodically.updated = periodicallyProducts.filter { $0.stockStatus != nil }.count
+    // Refresh view explicitly, recomputing everything
+    func forceRefresh() {
+        // Re-fetch both summary and product data
+        fetchProducts()
     }
 }
 
+// MARK: - API Calls
 extension ProductStockViewModel {
+    
     @MainActor
     func fetchProducts() {
         self.isLoading = true
+        self.errorProductStockView = nil // Clear previous errors
         
-        pipelineFetcher.get(clientID: self.deviceId) { [weak self] result in
+        // TODO: Update your `pipelineFetcher.get` function signature
+        // to accept all the filter parameters.
+        
+        pipelineFetcher.get(
+            clientID: self.deviceId,
+            page: self.currentPage,
+            itemsPerPage: self.selectedPageSize,
+            query: self.searchText,
+            stockStatus: self.selectedStockStatusFilter,
+            checkRecommendationStatus: self.selectedCheckRecommendationFilter,
+            startDate: self.startDateFilter,
+            endDate: self.endDateFilter
+        ) { [weak self] result in
             guard let self = self else { return }
             
+            // Use DispatchQueue.main.async for the @MainActor function
             DispatchQueue.main.async {
+                self.isLoading = false
                 switch result {
                 case .success(let response):
                     
-                    let mappedProduct = response.data.values.map { product in
-                        product.toProduct()
+                    let mappedProducts = response.data.items.map { $0.toProduct() }
+                    
+                    // Assign the fetched products directly to the UI list
+                    self.products = mappedProducts
+                    
+                    // Update index in ordered number
+                    for (index, _) in self.products.enumerated() {
+                        self.products[index].index = (index + 1)
                     }
                     
-                    self.products = mappedProduct
-                    self.filteredProducts = mappedProduct
+                    // Update pagination and total count from the API response
+                    self.totalPages = response.data.totalPages
+                    self.totalProducts = response.data.total // Assuming 'total' is the total count
                     
-                    if self.products.isEmpty {
-                        self.errorProductStockView = .noProductExists
+                    // Summary
+                    if let summary = response.data.summary {
+                        self.countCheckNow = CheckCount(updated: summary.low, total: response.data.total)
+                        self.countCheckSoon = CheckCount(updated: summary.medium, total: response.data.total)
+                        self.countCheckPeriodically = CheckCount(updated: summary.high, total: response.data.total)
+                    }
+                    
+                    // Update calendar filter start and end date
+                    if let minUpdatedAt = response.data.minUpdatedAt?.toDate(setTimeTo: "00:00:00") {
+                        self.startDate = minUpdatedAt
+                    }
+                    
+                    if let maxUpdatedAt = response.data.maxUpdatedAt?.toDate(setTimeTo: "23:59:59") {
+                        self.endDate = maxUpdatedAt
+                        self.validTill = maxUpdatedAt.addingTimeInterval(7 * 24 * 60 * 60) // +7 days
+                    }
+
+                    // Update error states based on the API response
+                    if response.data.total == 0 {
+                        if !self.searchText.isEmpty {
+                            self.errorProductStockView = .noSearchResults
+                        } else if !self.selectedCheckRecommendationFilter.isEmpty || !self.selectedStockStatusFilter.isEmpty || self.startDateFilter != nil || self.endDateFilter != nil {
+                            self.errorProductStockView = .noFilterResults
+                        } else {
+                            self.errorProductStockView = .noProductExists
+                        }
                     } else {
-                        self.countProductsByCheckRecommendation()
-                        
                         self.errorProductStockView = nil
                     }
-                    self.isLoading = false
+                    
                 case .failure(let error):
                     print("Failed to fetch products:", error)
                     self.errorProductStockView = .apiFail
-                    self.isLoading = false
+                    self.products = []
+                    self.totalProducts = 0
+                    self.totalPages = 1
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    func fetchCheckRecommendationSummary() {
+        self.isLoading = true
+        
+        pipelineFetcher.getCheckRecommendationSummary(
+            clientID: self.deviceId
+        ) { [weak self] result in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                self.isLoading = false
+                switch result {
+                case .success(let response):
+                    // Assuming your API response keys are 'low', 'medium', 'high'
+                    // and 'total' as provided in your example.
+                    self.countCheckNow = CheckCount(updated: response.data.low, total: response.data.total)
+                    self.countCheckSoon = CheckCount(updated: response.data.medium, total: response.data.total)
+                    self.countCheckPeriodically = CheckCount(updated: response.data.high, total: response.data.total)
+                    
+                case .failure(let error):
+                    print("Failed to fetch check recommendation summary:", error)
+                    // Optionally set an error state for the summary cards
                 }
             }
         }
@@ -121,20 +268,19 @@ extension ProductStockViewModel {
         self.isLoading = true
         
         let products: [UpdateProductStatusRequest] = [UpdateProductStatusRequest(productId: productId, status: status)]
-        
         let request: UpdateProductStatusArrayRequest = UpdateProductStatusArrayRequest(products: products)
         
         pipelineFetcher.updateStatusStock(clientID: self.deviceId, request: request) { [weak self] result in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
+                self.isLoading = false
                 switch result {
                 case .success(_):
                     callback()
-                    self.isLoading = false
+                    self.fetchProducts()
                 case .failure(let error):
-                    print("Failed to fetch products:", error)
-                    self.isLoading = false
+                    print("Failed to update stock status:", error)
                 }
             }
         }

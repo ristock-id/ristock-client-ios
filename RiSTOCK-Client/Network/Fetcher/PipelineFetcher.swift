@@ -10,13 +10,25 @@ import Foundation
 protocol PipelineFetcherProtocol: AnyObject {
     func get(
         clientID: String,
-        completion: @escaping (Result<SuccessResponse<ProductInsightArrayResponse>, NetworkServiceError>) -> Void
+        page: Int,
+        itemsPerPage: Int,
+        query: String?,
+        stockStatus: Set<StockStatus>?,
+        checkRecommendationStatus: Set<CheckRecommendationStatus>?,
+        startDate: Date?,
+        endDate: Date?,
+        completion: @escaping (Result<SuccessResponse<ProductInsightPaginationResponse>, NetworkServiceError>) -> Void
     )
     
     func updateStatusStock(
         clientID: String,
         request: UpdateProductStatusArrayRequest,
         completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
+    )
+    
+    func getCheckRecommendationSummary(
+        clientID: String,
+        completion: @escaping (Result<SuccessResponse<CheckRecommendationSummaryResponse>, NetworkServiceError>) -> Void
     )
 }
 
@@ -29,10 +41,60 @@ final class PipelineFetcher: PipelineFetcherProtocol {
     
     func get(
         clientID: String = "",
-        completion: @escaping (Result<SuccessResponse<ProductInsightArrayResponse>, NetworkServiceError>) -> Void
+        page: Int = 1,
+        itemsPerPage: Int = 20,
+        query: String? = nil,
+        stockStatus: Set<StockStatus>? = nil,
+        checkRecommendationStatus: Set<CheckRecommendationStatus>? = nil,
+        startDate: Date? = nil,
+        endDate: Date? = nil,
+        completion: @escaping (Result<SuccessResponse<ProductInsightPaginationResponse>, NetworkServiceError>) -> Void
     ) {
+
+        var parameters: [String: Any] = [
+            "page": page,
+            "page_size": itemsPerPage
+        ]
+        
+        if let query = query, !query.isEmpty {
+            parameters["query"] = query
+        }
+        
+        if let stockStatus = stockStatus, !stockStatus.isEmpty {
+            parameters["stock_status"] = stockStatus.map { $0.filterString }
+        }
+        
+        if let checkRecommendationStatus = checkRecommendationStatus, !checkRecommendationStatus.isEmpty {
+            parameters["check_recommendation"] = checkRecommendationStatus.map { $0.filterString }
+        }
+        
+        // Add optional dates formatted as "YYYY-MM-DD"
+        if let startDate = startDate {
+            parameters["start_date"] = startDate.toString(format: "YYYY-MM-dd", setTimeTo: "00:00:01")
+        }
+        
+        if let endDate = endDate {
+            parameters["end_date"] = endDate.toString(format: "YYYY-MM-dd", setTimeTo: "23:59:59")
+        }
+        
         networkService.request(
             urlString: PipelineEndpoint.get.urlString,
+            method: .get,
+            parameters: parameters,
+            headers: [
+                "Client-Id": clientID
+            ],
+            body: nil,
+            completion: completion
+        )
+    }
+    
+    func getCheckRecommendationSummary(
+        clientID: String = "",
+        completion: @escaping (Result<SuccessResponse<CheckRecommendationSummaryResponse>, NetworkServiceError>) -> Void
+    ) {
+        networkService.request(
+            urlString: PipelineEndpoint.getCheckRecommendationSummary.urlString,
             method: .get,
             parameters: [:],
             headers: ["Client-Id": clientID],
@@ -56,4 +118,76 @@ final class PipelineFetcher: PipelineFetcherProtocol {
             completion: completion
         )
     }
+    
+    func triggerPipeline(
+        clientID: String = "",
+        completion: @escaping (Result<SuccessResponse<ProductInsightArrayResponse>, NetworkServiceError>) -> Void
+    ) {
+        networkService.request(
+            urlString: PipelineEndpoint.triggerPipeline.urlString,
+            method: .get,
+            parameters: [:],
+            headers: ["Client-Id": clientID],
+            body: nil
+        ) { result in
+            completion(self.normalizePipelineResult(result))
+        }
+    }
 }
+
+extension PipelineFetcher {
+    func triggerPipelineAsync(
+        clientID: String = ""
+    ) async throws -> SuccessResponse<ProductInsightArrayResponse> {
+        try await withCheckedThrowingContinuation { continuation in
+            networkService.request(
+                urlString: PipelineEndpoint.triggerPipeline.urlString,
+                method: .get,
+                parameters: [:],
+                headers: ["Client-Id": clientID],
+                body: nil
+            ) { result in
+                let normalized = self.normalizePipelineResult(result)
+                
+                switch normalized {
+                case .success(let response):
+                    continuation.resume(returning: response)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+}
+
+private extension PipelineFetcher {
+    func normalizePipelineResult(
+        _ result: Result<SuccessResponse<ProductInsightArrayResponse>, NetworkServiceError>
+    ) -> Result<SuccessResponse<ProductInsightArrayResponse>, NetworkServiceError> {
+        switch result {
+        case .success:
+            return result
+        case .failure(let error):
+            guard case .decodingFailed(let underlying) = error else {
+                return .failure(error)
+            }
+            
+            let message = messageForPipelineFallback(from: underlying)
+            if let data = try? ProductInsightArrayResponse(jsonArray: []) {
+                let placeholder = SuccessResponse(
+                    code: 202,
+                    message: message,
+                    data: data
+                )
+                return .success(placeholder)
+            } else {
+                return .failure(error)
+            }
+        }
+    }
+    
+    func messageForPipelineFallback(from _: Error) -> String {
+        "Pipeline triggered successfully. Data processing in progress."
+    }
+}
+
