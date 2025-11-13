@@ -142,9 +142,15 @@ struct ProductStockView: View {
                     .font(.largeTitle.weight(.bold))
                     .foregroundColor(Token.primary500.swiftUIColor)
                 Spacer()
-                Image(systemName: "arrow.right.square")
-                    .font(.title2)
-                    .foregroundColor(.gray)
+                
+                Button {
+                    viewModel.logout()
+                } label: {
+                    Image(systemName: "arrow.right.square")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal)
             
@@ -216,15 +222,19 @@ struct ProductStockView: View {
     @ViewBuilder
     private func productListSection() -> some View {
         ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.products.indices, id: \.self) { index in
-                    StaticProductRowView(
-                        index: index + 1,
-                        name: viewModel.products[index].name
-                    )
+            if viewModel.isLoading {
+                ProgressView()
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.products.indices, id: \.self) { index in
+                        StaticProductRowView(
+                            index: index + 1,
+                            name: viewModel.products[index].name
+                        )
+                    }
                 }
+                .padding(.top)
             }
-            .padding(.top)
         }
     }
 }

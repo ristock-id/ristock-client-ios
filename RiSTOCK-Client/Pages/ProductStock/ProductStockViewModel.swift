@@ -119,6 +119,10 @@ class ProductStockViewModel: ObservableObject {
         fetchProducts()
     }
     
+    func logout() {
+        UserDefaults.standard.removeObject(forKey: "clientId")
+    }
+    
     // MARK: - Filtering
     
     // This function is called when a filter changes.
@@ -278,7 +282,6 @@ extension ProductStockViewModel {
                 switch result {
                 case .success(_):
                     callback()
-                    self.fetchProducts()
                 case .failure(let error):
                     print("Failed to update stock status:", error)
                 }
