@@ -8,20 +8,22 @@
 import SwiftUI
 
 struct ContentView: View {
-    @AppStorage("userId") private var userId: String = ""  
+    @AppStorage("clientId") private var clientId: String = ""
     @State private var isPresentingScanner = false
 
     var body: some View {
-        if !userId.isEmpty {
-            VStack(spacing: 16) {
-                Text("User ID: \(userId)")
+        if !clientId.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("User ID: \(clientId)")
                     .font(.title)
                     .padding()
                 
                 Button("Logout") {
-                    userId = ""
+                    clientId = ""
                 }
                 .buttonStyle(.borderedProminent)
+                
+                ProductStockView(viewModel: ProductStockViewModel(deviceId: clientId))
             }
         } else {
             VStack(spacing: 20) {
@@ -37,7 +39,7 @@ struct ContentView: View {
                     ScannerView { result in
                         DispatchQueue.main.async {
                             isPresentingScanner = false
-                            userId = result
+                            clientId = result
                         }
                     }
                 }

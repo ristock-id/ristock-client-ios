@@ -106,6 +106,9 @@ extension Token {
     @ColorElement(light: UIColor.from("#E7B006"), dark: UIColor.from("#E7B006"))
     static var warning600: UIColor
     
+    @ColorElement(light: UIColor.from("#E7B006"), dark: UIColor.from("#E7B006"))
+    static var warning650: UIColor
+    
     @ColorElement(light: UIColor.from("#B48905"), dark: UIColor.from("#B48905"))
     static var warning700: UIColor
     

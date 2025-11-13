@@ -8,8 +8,7 @@
 import Foundation
 
 enum APIConfig {
-//    static let baseURL = "https://keely-checkable-unhedonistically.ngrok-free.dev/v1"
-    static let baseURL = "http://127.0.0.1:5000/v1"
+    static let baseURL = "https://ristock-be-main-jszuzedd7a-et.a.run.app/v1"
 }
 
 protocol EndpointProtocol {
