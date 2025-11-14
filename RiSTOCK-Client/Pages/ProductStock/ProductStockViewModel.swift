@@ -86,6 +86,8 @@ class ProductStockViewModel: ObservableObject {
     @Published var startDate: Date = Date.distantPast
     @Published var endDate: Date = Date.distantFuture
     
+    @Published var isChecked: Bool? = nil
+    
     // MARK: - Private Properties
     private let deviceId: String
     private var pipelineFetcher: PipelineFetcherProtocol

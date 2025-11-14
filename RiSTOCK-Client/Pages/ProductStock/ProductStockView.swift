@@ -86,15 +86,29 @@ struct ProductRowView: View {
 struct ProductStockView: View {
     @StateObject var viewModel: ProductStockViewModel
     @State private var isHovered: Bool = false
-
+    
+    @State var isChecked: Bool? = nil
+    
+    @FocusState var isSearchFieldFocused: Bool
+    
     var body: some View {
         VStack(spacing: 0) {
             headerSection()
+            
+            SearchAndFilter(
+                searchText: $viewModel.searchText,
+                isChecked: $viewModel.isChecked,
+                isSearchFieldFocused: $isSearchFieldFocused
+            )
+            
             searchAndFilterSection()
             productListSection()
         }
         .background(Color.gray.opacity(0.05))
         .edgesIgnoringSafeArea(.all)
+        .onTapGesture {
+            isSearchFieldFocused = false
+        }
     }
 
     // MARK: - Header Section
@@ -139,6 +153,7 @@ struct ProductStockView: View {
                     .foregroundColor(.gray)
                 TextField("Cari produk...", text: $viewModel.searchText)
                     .textFieldStyle(PlainTextFieldStyle())
+                    .focused($isSearchFieldFocused)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
@@ -201,4 +216,3 @@ struct ProductStockView: View {
         }
     }
 }
-
