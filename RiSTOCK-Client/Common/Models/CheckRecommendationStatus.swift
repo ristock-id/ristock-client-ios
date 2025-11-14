@@ -39,4 +39,19 @@ enum CheckRecommendationStatus: String, CaseIterable {
             return "Low"
         }
     }
+    
+    /// Initialize from priority level string
+    ///
+    /// - Parameter value: Priority level string
+    /// - Returns: Corresponding CheckRecommendationStatus or nil if unmapped
+    static func from(_ value: String?) -> CheckRecommendationStatus {
+        switch value {
+        case "High": return .now
+        case "Medium": return .soon
+        case "Low": return .periodically
+        default:
+            print("[WARNING] Unmapped priorityLevel: \(value ?? "nil"), defaulting to .periodically")
+            return .periodically
+        }
+    }
 }

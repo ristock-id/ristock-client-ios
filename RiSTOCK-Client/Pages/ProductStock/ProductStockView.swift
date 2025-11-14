@@ -7,43 +7,7 @@
 
 import SwiftUI
 
-//struct ProductStockView: View {
-//    @StateObject var viewModel: ProductStockViewModel
-//    @State private var isHovered: Bool = false
-//    
-//    var body: some View {
-//        ScrollView {
-//            if viewModel.isLoading {
-//                ProgressView()
-//                    .progressViewStyle(CircularProgressViewStyle())
-//                    .scaleEffect(2)
-//                    .padding()
-//            } else {
-//                VStack {
-//                    ForEach(viewModel.products.indices, id: \.self) { index in
-//                        HStack {
-//                            Text(viewModel.products[index].name)
-//                                .font(.headline)
-//                            Spacer()
-//                            
-//                            StockStatusMenu(
-//                                product: $viewModel.products[index],
-//                                fetchStatusUpdate: viewModel.fetchUpdateStockStatus,
-//                                isHovered: $isHovered
-//                            )
-//                        }
-//                        .padding()
-//                        Divider()
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-// MARK: - 2. Component Helpers (No State/Bindings)
-
-struct StaticStockInfoCardView: View {
+struct StockInfoCardView: View {
     let status: StockStatus
     
     var body: some View {
@@ -73,7 +37,7 @@ struct StaticStockInfoCardView: View {
     }
 }
 
-struct StaticProductRowView: View {
+struct ProductRowView: View {
     let index: Int
     let name: String
     
@@ -156,7 +120,7 @@ struct ProductStockView: View {
             
             HStack(spacing: 10) {
                 ForEach(StockStatus.allCases, id: \.self) { status in
-                    StaticStockInfoCardView(status: status)
+                    StockInfoCardView(status: status)
                 }
             }
             .padding(.horizontal)
@@ -173,9 +137,8 @@ struct ProductStockView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-                Text("Search produk..")
-                    .foregroundColor(.gray)
-                Spacer()
+                TextField("Cari produk...", text: $viewModel.searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
@@ -197,7 +160,7 @@ struct ProductStockView: View {
                     ForEach(StockStatus.allCases, id: \.self) { status in
                         Text(status.rawValue)
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Token.primary500.swiftUIColor)
+                            .foregroundColor(Token.white.swiftUIColor)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .background(
@@ -227,7 +190,7 @@ struct ProductStockView: View {
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
-                        StaticProductRowView(
+                        ProductRowView(
                             index: index + 1,
                             name: viewModel.products[index].name
                         )

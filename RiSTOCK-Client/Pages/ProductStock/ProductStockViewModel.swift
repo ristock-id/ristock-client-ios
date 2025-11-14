@@ -60,29 +60,18 @@ class ProductStockViewModel: ObservableObject {
     // MARK: - Pagination
     // These properties also trigger a new API call.
     @Published var selectedPageSize = 20 {
-        didSet { fetchProducts() }
+        didSet { fetchProductsSummary() }
     }
     
     @Published var currentPage = 1 {
-        didSet { fetchProducts() }
+        didSet { fetchProductsSummary() }
     }
     
     @Published var totalPages = 1
     
     // MARK: - Data Properties
     // This is now the single source of truth for the UI, populated directly by the API.
-    @Published var products: [Product] = []
-    
-    @Published var selectedProduct: Product? = nil {
-        didSet {
-            // Update the product in the 'products' list
-            if let selectedProduct = selectedProduct {
-                if let index = products.firstIndex(where: { $0.id == selectedProduct.id }) {
-                    products[index] = selectedProduct
-                }
-            }
-        }
-    }
+    @Published var products: [ProductSummaryUI] = []
     
     // MARK: - UI State Properties
     @Published var totalProducts: Int = 0 // Renamed from countProducts
@@ -109,14 +98,14 @@ class ProductStockViewModel: ObservableObject {
         
         // Debounce search text, then trigger an API fetch
         $searchText
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(800), scheduler: DispatchQueue.main)
             .removeDuplicates()
             .sink { [weak self] _ in
                 self?.resetPageAndFetch()
             }
             .store(in: &cancellables)
         
-        fetchProducts()
+        fetchProductsSummary()
     }
     
     func logout() {
@@ -131,7 +120,7 @@ class ProductStockViewModel: ObservableObject {
         // Only fetch if the page is not already 1.
         // If it is 1, the `didSet` for `currentPage` will call fetchProducts().
         if currentPage == 1 {
-            fetchProducts()
+            fetchProductsSummary()
         } else {
             currentPage = 1 // This will trigger fetchProducts() via its didSet
         }
@@ -152,22 +141,18 @@ class ProductStockViewModel: ObservableObject {
     // Refresh view explicitly, recomputing everything
     func forceRefresh() {
         // Re-fetch both summary and product data
-        fetchProducts()
+        fetchProductsSummary()
     }
 }
 
 // MARK: - API Calls
 extension ProductStockViewModel {
-    
     @MainActor
-    func fetchProducts() {
+    func fetchProductsSummary() {
         self.isLoading = true
         self.errorProductStockView = nil // Clear previous errors
         
-        // TODO: Update your `pipelineFetcher.get` function signature
-        // to accept all the filter parameters.
-        
-        pipelineFetcher.get(
+        pipelineFetcher.getProductsSummary(
             clientID: self.deviceId,
             page: self.currentPage,
             itemsPerPage: self.selectedPageSize,
@@ -185,25 +170,36 @@ extension ProductStockViewModel {
                 switch result {
                 case .success(let response):
                     
-                    let mappedProducts = response.data.items.map { $0.toProduct() }
+                    var tempProducts: [ProductSummaryUI] = []
                     
-                    // Assign the fetched products directly to the UI list
-                    self.products = mappedProducts
-                    
-                    // Update index in ordered number
-                    for (index, _) in self.products.enumerated() {
-                        self.products[index].index = (index + 1)
+                    if let datas = response.data.items {
+                        for (index, _) in datas.enumerated() {
+                            tempProducts.append(datas[index].toProductSummaryUI(
+                                index: (index + 1) + ((self.currentPage - 1) * self.selectedPageSize)
+                            ))
+                        }
                     }
                     
+                    self.products = tempProducts
+                    
                     // Update pagination and total count from the API response
-                    self.totalPages = response.data.totalPages
-                    self.totalProducts = response.data.total // Assuming 'total' is the total count
+                    self.totalPages = response.data.totalPages ?? 1
+                    self.totalProducts = response.data.total ?? 0
                     
                     // Summary
                     if let summary = response.data.summary {
-                        self.countCheckNow = CheckCount(updated: summary.low, total: response.data.total)
-                        self.countCheckSoon = CheckCount(updated: summary.medium, total: response.data.total)
-                        self.countCheckPeriodically = CheckCount(updated: summary.high, total: response.data.total)
+                        self.countCheckNow = CheckCount(
+                            updated: summary.low,
+                            total: response.data.total ?? 0
+                        )
+                        self.countCheckSoon = CheckCount(
+                            updated: summary.medium,
+                            total: response.data.total ?? 0
+                        )
+                        self.countCheckPeriodically = CheckCount(
+                            updated: summary.high,
+                            total: response.data.total ?? 0
+                        )
                     }
                     
                     // Update calendar filter start and end date
@@ -217,7 +213,7 @@ extension ProductStockViewModel {
                     }
 
                     // Update error states based on the API response
-                    if response.data.total == 0 {
+                    if self.totalProducts == 0 {
                         if !self.searchText.isEmpty {
                             self.errorProductStockView = .noSearchResults
                         } else if !self.selectedCheckRecommendationFilter.isEmpty || !self.selectedStockStatusFilter.isEmpty || self.startDateFilter != nil || self.endDateFilter != nil {

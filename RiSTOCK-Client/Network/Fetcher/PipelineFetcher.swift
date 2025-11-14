@@ -30,6 +30,24 @@ protocol PipelineFetcherProtocol: AnyObject {
         clientID: String,
         completion: @escaping (Result<SuccessResponse<CheckRecommendationSummaryResponse>, NetworkServiceError>) -> Void
     )
+    
+    func getProductsSummary(
+        clientID: String,
+        page: Int,
+        itemsPerPage: Int,
+        query: String?,
+        stockStatus: Set<StockStatus>?,
+        checkRecommendationStatus: Set<CheckRecommendationStatus>?,
+        startDate: Date?,
+        endDate: Date?,
+        completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
+    )
+    
+    func getProductDetail(
+        clientID: String,
+        productID: String,
+        completion: @escaping (Result<ProductDetailResponse, NetworkServiceError>) -> Void
+    )
 }
 
 final class PipelineFetcher: PipelineFetcherProtocol {
@@ -132,6 +150,73 @@ final class PipelineFetcher: PipelineFetcherProtocol {
         ) { result in
             completion(self.normalizePipelineResult(result))
         }
+    }
+
+    func getProductsSummary(
+        clientID: String = "",
+        page: Int = 1,
+        itemsPerPage: Int = 20,
+        query: String? = nil,
+        stockStatus: Set<StockStatus>? = nil,
+        checkRecommendationStatus: Set<CheckRecommendationStatus>? = nil,
+        startDate: Date? = nil,
+        endDate: Date? = nil,
+        completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
+    ) {
+
+        var parameters: [String: Any] = [
+            "page": page,
+            "page_size": itemsPerPage
+        ]
+        
+        if let query = query, !query.isEmpty {
+            parameters["query"] = query
+        }
+        
+        if let stockStatus = stockStatus, !stockStatus.isEmpty {
+            parameters["stock_status"] = stockStatus.map { $0.filterString }
+        }
+        
+        if let checkRecommendationStatus = checkRecommendationStatus, !checkRecommendationStatus.isEmpty {
+            parameters["check_recommendation"] = checkRecommendationStatus.map { $0.filterString }
+        }
+        
+        // Add optional dates formatted as "YYYY-MM-DD"
+        if let startDate = startDate {
+            parameters["start_date"] = startDate.toString(format: "YYYY-MM-dd", setTimeTo: "00:00:01")
+        }
+        
+        if let endDate = endDate {
+            parameters["end_date"] = endDate.toString(format: "YYYY-MM-dd", setTimeTo: "23:59:59")
+        }
+        
+        networkService.request(
+            urlString: PipelineEndpoint.getProductsSummary.urlString,
+            method: .get,
+            parameters: parameters,
+            headers: [
+                "Client-Id": clientID
+            ],
+            body: nil,
+            completion: completion
+        )
+    }
+    
+    func getProductDetail(
+        clientID: String = "",
+        productID: String,
+        completion: @escaping (Result<ProductDetailResponse, NetworkServiceError>) -> Void
+    ) {
+        networkService.request(
+            urlString: PipelineEndpoint.getProductDetail.urlString,
+            method: .get,
+            parameters: [
+                "product_unified_id": productID
+            ],
+            headers: ["Client-Id": clientID],
+            body: nil,
+            completion: completion
+        )
     }
 }
 
