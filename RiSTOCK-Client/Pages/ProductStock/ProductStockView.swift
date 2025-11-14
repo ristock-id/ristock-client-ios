@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct StockInfoCardView: View {
+    @State private var isActive: Bool = false
+    
     let status: StockStatus
+    let count: Int
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("123")
+            Text("\(count)")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.white)
             
@@ -23,16 +26,12 @@ struct StockInfoCardView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
+        .onTapGesture {apGesture in
+            isActive.toggle()
+        }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Token.primary500.swiftUIColor)
-                .overlay(
-                    Image(systemName: "circle.grid.3x3.fill")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Token.primary500.swiftUIColor)
-                        .padding([.top, .trailing], 8)
-                    , alignment: .topTrailing
-                )
+                .fill(isActive ? Token.primary700.swiftUIColor : Token.primary500.swiftUIColor)
         )
     }
 }
@@ -119,9 +118,9 @@ struct ProductStockView: View {
             .padding(.horizontal)
             
             HStack(spacing: 10) {
-                ForEach(StockStatus.allCases, id: \.self) { status in
-                    StockInfoCardView(status: status)
-                }
+                StockInfoCardView(status: .out, count: viewModel.countCheckNow.updated)
+                StockInfoCardView(status: .low, count: viewModel.countCheckSoon.updated)
+                StockInfoCardView(status: .safe, count: viewModel.countCheckPeriodically.updated)
             }
             .padding(.horizontal)
         }

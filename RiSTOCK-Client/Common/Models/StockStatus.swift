@@ -2,9 +2,9 @@ import Foundation
 import SwiftUI
 
 enum StockStatus: String, CaseIterable {
-    case safe = "Aman"
-    case low = "Menipis"
-    case out = "Habis"
+    case safe = "Cek Berkala"
+    case low = "Cek Segera"
+    case out = "Cek Sekarang"
     
     var accentColor: UIColor {
         switch self {
