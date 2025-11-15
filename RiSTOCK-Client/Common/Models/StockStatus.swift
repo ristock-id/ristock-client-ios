@@ -39,6 +39,17 @@ enum StockStatus: String, CaseIterable {
         }
     }
     
+    var icon: Image {
+        switch self {
+        case .safe:
+            Image("clock-success-400")
+        case .low:
+            Image("bell")
+        case .out:
+            Image("warning")
+        }
+    }
+    
     /// Helper to create StockStatus from a string value
     ///
     /// - Parameter value: The string value representing the stock status

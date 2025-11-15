@@ -15,23 +15,34 @@ struct StockInfoCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(count)")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+            HStack {
+                Text("\(count)")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
+                
+                Spacer()
+                
+                status.icon
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 24, maxHeight: 24)
+            }
+            .padding(.vertical, 2)
             
             Text(status.rawValue)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.8))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
             
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
+        .padding(.horizontal, 12)
         .onTapGesture {apGesture in
             isActive.toggle()
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isActive ? Token.primary700.swiftUIColor : Token.primary500.swiftUIColor)
+                .fill(isActive ? Token.primary700.swiftUIColor : Token.primary50.swiftUIColor)
         )
     }
 }
@@ -201,3 +212,56 @@ struct ProductStockView: View {
     }
 }
 
+#Preview("With Mock Data") {
+    let mockViewModel = ProductStockViewModel(
+        pipelineFetcher: PipelineFetcher(),
+        deviceId: "mock-device-id"
+    )
+    
+    mockViewModel.products = [
+        ProductSummaryUI(
+            id: "1",
+            index: 0,
+            name: "Product A",
+            checkRecommendation: .now,
+            stockStatus: .out,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        ),
+        ProductSummaryUI(
+            id: "2",
+            index: 1,
+            name: "Product B",
+            checkRecommendation: .soon,
+            stockStatus: .low,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        ),
+        ProductSummaryUI(
+            id: "3",
+            index: 2,
+            name: "Product C",
+            checkRecommendation: .periodically,
+            stockStatus: .safe,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        )
+    ]
+    mockViewModel.countCheckNow = CheckCount(updated: 420, total: 5)
+    mockViewModel.countCheckSoon = CheckCount(updated: 999, total: 10)
+    mockViewModel.countCheckPeriodically = CheckCount(updated: 999, total: 15)
+    
+    return ProductStockView(viewModel: mockViewModel)
+}
+
+#Preview("Loading State") {
+    let mockViewModel = ProductStockViewModel(
+        pipelineFetcher: PipelineFetcher(),
+        deviceId: "mock-device-id"
+    )
+    mockViewModel.isLoading = true
+    
+    return ProductStockView(viewModel: mockViewModel)
+}
+
+    
