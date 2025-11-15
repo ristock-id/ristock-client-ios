@@ -90,6 +90,10 @@ class ProductStockViewModel: ObservableObject {
     private let deviceId: String
     private var pipelineFetcher: PipelineFetcherProtocol
     private var cancellables: Set<AnyCancellable> = []
+    
+    enum UpdateError: Error {
+        case productNotFound
+    }
 
     // MARK: - Init
     init(pipelineFetcher: PipelineFetcherProtocol = PipelineFetcher(), deviceId: String) {
@@ -264,7 +268,31 @@ extension ProductStockViewModel {
     }
     
     @MainActor
-    func fetchUpdateStockStatus(with productId: String, to status: StockStatus, callback: @escaping (() -> Void)) {
+    func updateStockStatus(for productId: String, to status: StockStatus, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let index = products.firstIndex(where: { $0.id == productId }) else {
+            completion(.failure(UpdateError.productNotFound))
+            return
+        }
+        
+        let previousStatus = products[index].stockStatus
+        products[index].stockStatus = status
+        
+        performStockStatusUpdate(productId: productId, status: status) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success:
+                completion(.success(()))
+            case .failure(let error):
+                if let revertIndex = self.products.firstIndex(where: { $0.id == productId }) {
+                    self.products[revertIndex].stockStatus = previousStatus
+                }
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    @MainActor
+    private func performStockStatusUpdate(productId: String, status: StockStatus, callback: @escaping (Result<Void, Error>) -> Void) {
         self.isLoading = true
         
         let products: [UpdateProductStatusRequest] = [UpdateProductStatusRequest(productId: productId, status: status)]
@@ -276,10 +304,11 @@ extension ProductStockViewModel {
             DispatchQueue.main.async {
                 self.isLoading = false
                 switch result {
-                case .success(_):
-                    callback()
+                case .success:
+                    callback(.success(()))
                 case .failure(let error):
                     print("Failed to update stock status:", error)
+                    callback(.failure(error))
                 }
             }
         }
