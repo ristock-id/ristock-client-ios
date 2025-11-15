@@ -86,10 +86,17 @@ class ProductStockViewModel: ObservableObject {
     @Published var startDate: Date = Date.distantPast
     @Published var endDate: Date = Date.distantFuture
     
+    @Published var isChecked: Bool? = nil {
+        didSet { resetPageAndFetch() }
+    }
+    
     // MARK: - Private Properties
     private let deviceId: String
     private var pipelineFetcher: PipelineFetcherProtocol
     private var cancellables: Set<AnyCancellable> = []
+
+    // MARK: - Concurrency Control
+    @Published private var currentRequestID = UUID()
 
     // MARK: - Init
     init(pipelineFetcher: PipelineFetcherProtocol = PipelineFetcher(), deviceId: String) {
@@ -116,7 +123,7 @@ class ProductStockViewModel: ObservableObject {
     
     // This function is called when a filter changes.
     // It resets the page to 1 and fetches new data.
-    private func resetPageAndFetch() {
+    func resetPageAndFetch() {
         // Only fetch if the page is not already 1.
         // If it is 1, the `didSet` for `currentPage` will call fetchProducts().
         if currentPage == 1 {
@@ -143,14 +150,25 @@ class ProductStockViewModel: ObservableObject {
         // Re-fetch both summary and product data
         fetchProductsSummary()
     }
+
+    func loadNextPage() {
+        guard !self.isLoading && self.currentPage < self.totalPages else { return }
+        
+        self.currentPage += 1
+        
+        self.fetchProductsSummary(isAppending: true)
+    }
 }
 
 // MARK: - API Calls
 extension ProductStockViewModel {
     @MainActor
-    func fetchProductsSummary() {
+    func fetchProductsSummary(isAppending: Bool = false) {
         self.isLoading = true
         self.errorProductStockView = nil // Clear previous errors
+        
+        let requestID = UUID()
+        self.currentRequestID = requestID
         
         pipelineFetcher.getProductsSummary(
             clientID: self.deviceId,
@@ -160,12 +178,15 @@ extension ProductStockViewModel {
             stockStatus: self.selectedStockStatusFilter,
             checkRecommendationStatus: self.selectedCheckRecommendationFilter,
             startDate: self.startDateFilter,
-            endDate: self.endDateFilter
+            endDate: self.endDateFilter,
+            isChecked: self.isChecked
         ) { [weak self] result in
             guard let self = self else { return }
             
             // Use DispatchQueue.main.async for the @MainActor function
             DispatchQueue.main.async {
+                guard self.currentRequestID == requestID else { return }
+                
                 self.isLoading = false
                 switch result {
                 case .success(let response):
@@ -180,7 +201,11 @@ extension ProductStockViewModel {
                         }
                     }
                     
-                    self.products = tempProducts
+                    if isAppending {
+                        self.products.append(contentsOf: tempProducts)
+                    } else {
+                        self.products = tempProducts
+                    }
                     
                     // Update pagination and total count from the API response
                     self.totalPages = response.data.totalPages ?? 1
@@ -189,15 +214,15 @@ extension ProductStockViewModel {
                     // Summary
                     if let summary = response.data.summary {
                         self.countCheckNow = CheckCount(
-                            updated: summary.low,
+                            updated: summary.low ?? 0,
                             total: response.data.total ?? 0
                         )
                         self.countCheckSoon = CheckCount(
-                            updated: summary.medium,
+                            updated: summary.medium ?? 0,
                             total: response.data.total ?? 0
                         )
                         self.countCheckPeriodically = CheckCount(
-                            updated: summary.high,
+                            updated: summary.high ?? 0,
                             total: response.data.total ?? 0
                         )
                     }
