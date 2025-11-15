@@ -81,9 +81,9 @@ struct SearchAndFilter: View {
                         filterButtonIsTapped()
                     } label: {
                         Image(systemName: "slider.horizontal.3")
-                            .foregroundColor(Token.gray500.swiftUIColor)
-                            .padding(12)
-                            .background(Token.gray50.swiftUIColor)
+                            .foregroundColor(isChecked == nil ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
+                            .frame(width: 40, height: 40)
+                            .background(isChecked == nil ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
@@ -98,7 +98,7 @@ struct SearchAndFilter: View {
             filterSheet()
                 .presentationDetents([.fraction(0.4)])
         }
-        .onChange(of: isSearchFieldFocused) { focused in
+        .onChange(of: isSearchFieldFocused) { _, focused in
             if focused {
                 // Step 1: expand immediately
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
