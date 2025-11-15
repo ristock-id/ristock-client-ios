@@ -22,7 +22,7 @@ enum Token {
     @ColorElement(light: UIColor.from("#6C8B9D"), dark: UIColor.from("#6C8B9D"))
     static var primary300: UIColor
     
-    @ColorElement(light: UIColor.from("#5087A1"), dark: UIColor.from("#5087A1"))
+    @ColorElement(light: UIColor.from("#5087D1"), dark: UIColor.from("#5087D1"))
     static var primary400: UIColor
     
     @ColorElement(light: UIColor.from("#2469C6"), dark: UIColor.from("#2469C6"))

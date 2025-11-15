@@ -14,36 +14,74 @@ struct StockInfoCardView: View {
     let count: Int
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("\(count)")
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
-                
-                Spacer()
-                
-                status.icon
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 24, maxHeight: 24)
+        ZStack {
+            GeometryReader { geometry in
+                Path { path in
+                    let width = geometry.size.width
+                    let height = geometry.size.height
+                    
+                    path.move(to: CGPoint(x: width * 0.65, y: 0))
+                    
+                    path.addCurve(
+                        to: CGPoint(x: width * 0.7, y: height * 0.55),
+                        control1: CGPoint(x: width * 0.55, y: height * 0.2),
+                        control2: CGPoint(x: width * 0.5, y: height * 0.3)
+                    )
+                    
+                    path.addCurve(
+                        to: CGPoint(x: width * 0.7, y: height),
+                        control1: CGPoint(x: width * 0.8, y: height * 0.7),
+                        control2: CGPoint(x: width * 0.8, y: height * 0.8)
+                    )
+                    
+                    path.addLine(to: CGPoint(x: width, y: height))
+                    path.addLine(to: CGPoint(x: width, y: 0))
+                    path.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            isActive ? Token.primary400.swiftUIColor : Token.primary100.swiftUIColor,
+                            isActive ? Token.primary400.swiftUIColor : Token.primary100.swiftUIColor
+                        ]),
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
+                )
             }
-            .padding(.vertical, 2)
             
-            Text(status.rawValue)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
-            
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("\(count)")
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
+                    
+                    Spacer()
+                    
+                    status.icon
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 24, maxHeight: 24)
+                }
+                .padding(.vertical, 2)
+                
+                Text(status.rawValue)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 12)
-        .onTapGesture {apGesture in
+        .onTapGesture {
             isActive.toggle()
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isActive ? Token.primary700.swiftUIColor : Token.primary50.swiftUIColor)
+                .fill(isActive ? Token.primary600.swiftUIColor : Token.primary50.swiftUIColor)
         )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
