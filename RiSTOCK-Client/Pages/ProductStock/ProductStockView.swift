@@ -155,24 +155,28 @@ struct ProductStockView: View {
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
-        if viewModel.isLoading {
-            VStack {
-                Spacer()
-                
-                ProgressView()
-                
-                Spacer()
-            }
-        } else {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.products.indices, id: \.self) { index in
-                    ProductRowView(
-                        index: index + 1,
-                        name: viewModel.products[index].name
-                    )
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.products.indices, id: \.self) { index in
+                ProductRowView(
+                    index: index + 1,
+                    name: viewModel.products[index].name
+                )
+                .onAppear {
+                    let thresholdIndex = viewModel.products.count - 5
+                    
+                    let isNearEnd = index >= thresholdIndex
+                    
+                    if isNearEnd {
+                        viewModel.loadNextPage()
+                    }
                 }
             }
-            .padding(.top)
+            
+            if viewModel.isLoading {
+                ProgressView()
+                    .padding()
+            }
         }
+        .padding(.top)
     }
 }

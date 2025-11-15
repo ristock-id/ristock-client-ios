@@ -95,6 +95,9 @@ class ProductStockViewModel: ObservableObject {
     private var pipelineFetcher: PipelineFetcherProtocol
     private var cancellables: Set<AnyCancellable> = []
 
+    // MARK: - Concurrency Control
+    @Published private var currentRequestID = UUID()
+
     // MARK: - Init
     init(pipelineFetcher: PipelineFetcherProtocol = PipelineFetcher(), deviceId: String) {
         self.pipelineFetcher = pipelineFetcher
@@ -147,14 +150,25 @@ class ProductStockViewModel: ObservableObject {
         // Re-fetch both summary and product data
         fetchProductsSummary()
     }
+
+    func loadNextPage() {
+        guard !self.isLoading && self.currentPage < self.totalPages else { return }
+        
+        self.currentPage += 1
+        
+        self.fetchProductsSummary(isAppending: true)
+    }
 }
 
 // MARK: - API Calls
 extension ProductStockViewModel {
     @MainActor
-    func fetchProductsSummary() {
+    func fetchProductsSummary(isAppending: Bool = false) {
         self.isLoading = true
         self.errorProductStockView = nil // Clear previous errors
+        
+        let requestID = UUID()
+        self.currentRequestID = requestID
         
         pipelineFetcher.getProductsSummary(
             clientID: self.deviceId,
@@ -171,6 +185,8 @@ extension ProductStockViewModel {
             
             // Use DispatchQueue.main.async for the @MainActor function
             DispatchQueue.main.async {
+                guard self.currentRequestID == requestID else { return }
+                
                 self.isLoading = false
                 switch result {
                 case .success(let response):
@@ -185,7 +201,11 @@ extension ProductStockViewModel {
                         }
                     }
                     
-                    self.products = tempProducts
+                    if isAppending {
+                        self.products.append(contentsOf: tempProducts)
+                    } else {
+                        self.products = tempProducts
+                    }
                     
                     // Update pagination and total count from the API response
                     self.totalPages = response.data.totalPages ?? 1
