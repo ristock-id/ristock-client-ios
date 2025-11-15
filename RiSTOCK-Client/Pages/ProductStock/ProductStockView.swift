@@ -92,43 +92,49 @@ struct ProductStockView: View {
     @FocusState var isSearchFieldFocused: Bool
     
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Cek Stok Produk")
-                    .font(.largeTitle.weight(.bold))
-                    .foregroundColor(Token.primary500.swiftUIColor)
-                Spacer()
-                
-                Button {
-                    viewModel.logout()
-                } label: {
-                    Image(systemName: "arrow.right.square")
-                        .font(.title2)
-                        .foregroundColor(.gray)
+        ScrollView {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Cek Stok Produk")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundColor(Token.primary500.swiftUIColor)
+                    
+                    Spacer()
+                    
+                    Button {
+                        viewModel.logout()
+                    } label: {
+                        Image(systemName: "arrow.right.square")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal)
-            .padding(.top, 50)
-            
-            SearchAndFilter(
-                searchText: $viewModel.searchText,
-                isChecked: $viewModel.isChecked,
-                isSearchFieldFocused: $isSearchFieldFocused
-            )
-            
-            if !isSearchFieldFocused {
-                headerSection()
+                .padding(.horizontal)
+                .padding(.top, 50)
+                
+                SearchAndFilter(
+                    searchText: $viewModel.searchText,
+                    isChecked: $viewModel.isChecked,
+                    isSearchFieldFocused: $isSearchFieldFocused
+                )
+                
+                if !isSearchFieldFocused {
+                    headerSection()
+                        .animation(.bouncy, value: !isSearchFieldFocused)
+                }
+                
+                productListSection()
                     .animation(.bouncy, value: !isSearchFieldFocused)
             }
-            
-            productListSection()
-                .animation(.bouncy, value: !isSearchFieldFocused)
+            .background(Token.white.swiftUIColor)
+            .edgesIgnoringSafeArea(.all)
+            .onTapGesture {
+                isSearchFieldFocused = false
+            }
         }
-        .background(Color.gray.opacity(0.05))
-        .edgesIgnoringSafeArea(.all)
-        .onTapGesture {
-            isSearchFieldFocused = false
+        .refreshable {
+            viewModel.resetPageAndFetch()
         }
     }
     
@@ -149,20 +155,24 @@ struct ProductStockView: View {
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
-        ScrollView {
-            if viewModel.isLoading {
+        if viewModel.isLoading {
+            VStack {
+                Spacer()
+                
                 ProgressView()
-            } else {
-                LazyVStack(spacing: 0) {
-                    ForEach(viewModel.products.indices, id: \.self) { index in
-                        ProductRowView(
-                            index: index + 1,
-                            name: viewModel.products[index].name
-                        )
-                    }
-                }
-                .padding(.top)
+                
+                Spacer()
             }
+        } else {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.products.indices, id: \.self) { index in
+                    ProductRowView(
+                        index: index + 1,
+                        name: viewModel.products[index].name
+                    )
+                }
+            }
+            .padding(.top)
         }
     }
 }

@@ -120,7 +120,7 @@ class ProductStockViewModel: ObservableObject {
     
     // This function is called when a filter changes.
     // It resets the page to 1 and fetches new data.
-    private func resetPageAndFetch() {
+    func resetPageAndFetch() {
         // Only fetch if the page is not already 1.
         // If it is 1, the `didSet` for `currentPage` will call fetchProducts().
         if currentPage == 1 {
