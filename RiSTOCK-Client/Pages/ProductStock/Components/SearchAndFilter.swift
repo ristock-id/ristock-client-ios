@@ -10,36 +10,25 @@ import SwiftUI
 
 // MARK: - SearchAndFilter View
 struct SearchAndFilter: View {
+    // MARK: Properties Binding
     @Binding var searchText: String
     @Binding var isChecked: Bool?
     
     @FocusState.Binding var isSearchFieldFocused: Bool
     
-    @State private var isFilterPresented: Bool = false
+    // MARK: State Properties
+    @State private var isFilterPresented: Bool = false {
+        didSet {
+            if isFilterPresented {
+                isCheckedForFilter = isChecked
+            }
+        }
+    }
+    
     @State private var isCheckedForFilter: Bool? = nil
     
-    func cancelSearchIsTapped() {
-        isSearchFieldFocused = false
-    }
-    
-    func clearSearchIsTapped() {
-        searchText = ""
-    }
-    
-    func filterButtonIsTapped() {
-        isFilterPresented.toggle()
-    }
-    
-    func filterSheetButtonRemoveFilterTapped() {
-        isChecked = nil
-        isFilterPresented = false
-    }
-    
-    func filterSheetButtonApplyFilterTapped() {
-        isChecked = isCheckedForFilter
-        isFilterPresented = false
-    }
-    
+    @State private var showTrailingButton = true
+
     var body: some View {
         HStack(spacing: 8) {
             HStack {
@@ -59,7 +48,7 @@ struct SearchAndFilter: View {
                 
                 Spacer()
                 
-                if !searchText.isEmpty {
+                if isSearchFieldFocused {
                     Button {
                         clearSearchIsTapped()
                     } label: {
@@ -67,34 +56,39 @@ struct SearchAndFilter: View {
                             .foregroundColor(Token.gray200.swiftUIColor)
                     }
                     .buttonStyle(.plain)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
             .background(Token.gray50.swiftUIColor)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            
-            if !isSearchFieldFocused {
-                Button {
-                    filterButtonIsTapped()
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .foregroundColor(Token.gray500.swiftUIColor)
-                        .padding(12)
-                        .background(Token.gray50.swiftUIColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: isSearchFieldFocused)
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: showTrailingButton)
+
+            if showTrailingButton {
+                if isSearchFieldFocused {
+                    Button {
+                        cancelSearchIsTapped()
+                    } label: {
+                        Text("Cancel")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Token.gray500.swiftUIColor)
+                    }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                } else {
+                    Button {
+                        filterButtonIsTapped()
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .foregroundColor(Token.gray500.swiftUIColor)
+                            .padding(12)
+                            .background(Token.gray50.swiftUIColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
-                .animation(.default, value: isSearchFieldFocused)
-            } else {
-                Button {
-                    cancelSearchIsTapped()
-                } label: {
-                    Text("Cancel")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Token.gray500.swiftUIColor)
-                }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal)
@@ -104,8 +98,58 @@ struct SearchAndFilter: View {
             filterSheet()
                 .presentationDetents([.fraction(0.4)])
         }
+        .onChange(of: isSearchFieldFocused) { focused in
+            if focused {
+                // Step 1: expand immediately
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    showTrailingButton = false
+                }
+                // Step 2: show Cancel slightly after (staged)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        showTrailingButton = true
+                    }
+                }
+            } else {
+                // Reverse sequence
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    showTrailingButton = false
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        showTrailingButton = true
+                    }
+                }
+            }
+        }
     }
     
+    // MARK: Action Functions
+    func cancelSearchIsTapped() {
+        isSearchFieldFocused = false
+    }
+    
+    func clearSearchIsTapped() {
+        searchText = ""
+    }
+    
+    func filterButtonIsTapped() {
+        isFilterPresented.toggle()
+    }
+    
+    func filterSheetButtonRemoveFilterTapped() {
+        isChecked = nil
+        isCheckedForFilter = nil
+        isFilterPresented = false
+    }
+    
+    func filterSheetButtonApplyFilterTapped() {
+        isChecked = isCheckedForFilter
+        isFilterPresented = false
+    }
+    
+    
+    // MARK: View Builder Functions
     @ViewBuilder
     func filterSheet() -> some View {
         VStack(spacing: 0) {
@@ -136,13 +180,13 @@ struct SearchAndFilter: View {
                     
                         StatusOptionRow(
                             name: "Perlu di cek",
-                            statusValue: true,
+                            statusValue: false,
                             selectedStatus: $isCheckedForFilter
                         )
                         
                         StatusOptionRow(
                             name: "Sudah di cek",
-                            statusValue: false,
+                            statusValue: true,
                             selectedStatus: $isCheckedForFilter
                         )
                     }
