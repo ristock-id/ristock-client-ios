@@ -86,7 +86,9 @@ class ProductStockViewModel: ObservableObject {
     @Published var startDate: Date = Date.distantPast
     @Published var endDate: Date = Date.distantFuture
     
-    @Published var isChecked: Bool? = nil
+    @Published var isChecked: Bool? = nil {
+        didSet { resetPageAndFetch() }
+    }
     
     // MARK: - Private Properties
     private let deviceId: String
@@ -162,7 +164,8 @@ extension ProductStockViewModel {
             stockStatus: self.selectedStockStatusFilter,
             checkRecommendationStatus: self.selectedCheckRecommendationFilter,
             startDate: self.startDateFilter,
-            endDate: self.endDateFilter
+            endDate: self.endDateFilter,
+            isChecked: self.isChecked
         ) { [weak self] result in
             guard let self = self else { return }
             

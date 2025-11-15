@@ -16,6 +16,7 @@ struct SearchAndFilter: View {
     @FocusState.Binding var isSearchFieldFocused: Bool
     
     @State private var isFilterPresented: Bool = false
+    @State private var isCheckedForFilter: Bool? = nil
     
     func cancelSearchIsTapped() {
         isSearchFieldFocused = false
@@ -27,6 +28,16 @@ struct SearchAndFilter: View {
     
     func filterButtonIsTapped() {
         isFilterPresented.toggle()
+    }
+    
+    func filterSheetButtonRemoveFilterTapped() {
+        isChecked = nil
+        isFilterPresented = false
+    }
+    
+    func filterSheetButtonApplyFilterTapped() {
+        isChecked = isCheckedForFilter
+        isFilterPresented = false
     }
     
     var body: some View {
@@ -126,13 +137,13 @@ struct SearchAndFilter: View {
                         StatusOptionRow(
                             name: "Perlu di cek",
                             statusValue: true,
-                            selectedStatus: $isChecked
+                            selectedStatus: $isCheckedForFilter
                         )
                         
                         StatusOptionRow(
                             name: "Sudah di cek",
                             statusValue: false,
-                            selectedStatus: $isChecked
+                            selectedStatus: $isCheckedForFilter
                         )
                     }
                     
@@ -144,8 +155,7 @@ struct SearchAndFilter: View {
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     Button("Hapus") {
-                        isChecked = nil
-                        isFilterPresented = false
+                        filterSheetButtonRemoveFilterTapped()
                     }
                     .frame(maxWidth: .infinity)
                     .font(.system(size: 15, weight: .medium))
@@ -155,7 +165,7 @@ struct SearchAndFilter: View {
                     .cornerRadius(100)
                     
                     Button("Pakai") {
-                        isFilterPresented = false
+                        filterSheetButtonApplyFilterTapped()
                     }
                     .frame(maxWidth: .infinity)
                     .font(.system(size: 15, weight: .medium))
