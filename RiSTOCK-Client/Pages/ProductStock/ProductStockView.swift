@@ -96,37 +96,62 @@ struct ProductRowView: View {
 struct ProductStockView: View {
     @StateObject var viewModel: ProductStockViewModel
     @State private var isHovered: Bool = false
-
+    
+    @State var isChecked: Bool? = nil
+    
+    @FocusState var isSearchFieldFocused: Bool
+    
     var body: some View {
-        VStack(spacing: 0) {
-            headerSection()
-            searchAndFilterSection()
-            productListSection()
+        ScrollView {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Cek Stok Produk")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundColor(Token.primary500.swiftUIColor)
+                    
+                    Spacer()
+                    
+                    Button {
+                        viewModel.logout()
+                    } label: {
+                        Image(systemName: "arrow.right.square")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal)
+                .padding(.top, 50)
+                
+                SearchAndFilter(
+                    searchText: $viewModel.searchText,
+                    isChecked: $viewModel.isChecked,
+                    isSearchFieldFocused: $isSearchFieldFocused
+                )
+                
+                if !isSearchFieldFocused {
+                    headerSection()
+                        .animation(.bouncy, value: !isSearchFieldFocused)
+                }
+                
+                productListSection()
+                    .animation(.bouncy, value: !isSearchFieldFocused)
+            }
+            .background(Token.white.swiftUIColor)
+            .edgesIgnoringSafeArea(.all)
+            .onTapGesture {
+                isSearchFieldFocused = false
+            }
         }
-        .background(Color.gray.opacity(0.05))
-        .edgesIgnoringSafeArea(.all)
+        .refreshable {
+            viewModel.resetPageAndFetch()
+        }
     }
-
+    
     // MARK: - Header Section
     @ViewBuilder
     private func headerSection() -> some View {
         VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text("Cek Stok Produk")
-                    .font(.largeTitle.weight(.bold))
-                    .foregroundColor(Token.primary500.swiftUIColor)
-                Spacer()
-                
-                Button {
-                    viewModel.logout()
-                } label: {
-                    Image(systemName: "arrow.right.square")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal)
             
             HStack(spacing: 10) {
                 StockInfoCardView(status: .out, count: viewModel.countCheckNow.updated)
@@ -135,80 +160,34 @@ struct ProductStockView: View {
             }
             .padding(.horizontal)
         }
-        .padding(.top, 50)
-        .padding(.bottom, 10)
-    }
-
-    // MARK: - Search & Filter Section
-    @ViewBuilder
-    private func searchAndFilterSection() -> some View {
-        VStack(spacing: 15) {
-            // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                TextField("Cari produk...", text: $viewModel.searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            .padding(.horizontal)
-            
-            // Filter Chips
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    Image(systemName: "slider.horizontal.3")
-                        .foregroundColor(StockStatus.low.accentColor.swiftUIColor)
-                        .padding(8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                        )
-                    
-                    ForEach(StockStatus.allCases, id: \.self) { status in
-                        Text(status.rawValue)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Token.white.swiftUIColor)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Token.primary500.swiftUIColor)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                    )
-                            )
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 5)
-            }
-        }
-        .background(Color.white)
-        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 3)
     }
 
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
-        ScrollView {
-            if viewModel.isLoading {
-                ProgressView()
-            } else {
-                LazyVStack(spacing: 0) {
-                    ForEach(viewModel.products.indices, id: \.self) { index in
-                        ProductRowView(
-                            index: index + 1,
-                            name: viewModel.products[index].name
-                        )
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.products.indices, id: \.self) { index in
+                ProductRowView(
+                    index: index + 1,
+                    name: viewModel.products[index].name
+                )
+                .onAppear {
+                    let thresholdIndex = viewModel.products.count - 5
+                    
+                    let isNearEnd = index >= thresholdIndex
+                    
+                    if isNearEnd {
+                        viewModel.loadNextPage()
                     }
                 }
-                .padding(.top)
+            }
+            
+            if viewModel.isLoading {
+                ProgressView()
+                    .padding()
             }
         }
+        .padding(.top)
     }
 }
 
@@ -263,5 +242,3 @@ struct ProductStockView: View {
     
     return ProductStockView(viewModel: mockViewModel)
 }
-
-    

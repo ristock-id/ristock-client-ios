@@ -61,10 +61,10 @@ struct ProductSummaryData: JSONDecodable {
 }
 
 struct ProductSummaryCount: JSONDecodable {
-    let low: Int
-    let high: Int
-    let medium: Int
-    let total: Int
+    let low: Int?
+    let high: Int?
+    let medium: Int?
+    let total: Int?
 
     private enum CodingKeys: String, CodingKey {
         case low = "Low"

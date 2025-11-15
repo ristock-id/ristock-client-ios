@@ -40,6 +40,7 @@ protocol PipelineFetcherProtocol: AnyObject {
         checkRecommendationStatus: Set<CheckRecommendationStatus>?,
         startDate: Date?,
         endDate: Date?,
+        isChecked: Bool?,
         completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
     )
     
@@ -161,6 +162,7 @@ final class PipelineFetcher: PipelineFetcherProtocol {
         checkRecommendationStatus: Set<CheckRecommendationStatus>? = nil,
         startDate: Date? = nil,
         endDate: Date? = nil,
+        isChecked: Bool? = nil,
         completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
     ) {
 
@@ -188,6 +190,10 @@ final class PipelineFetcher: PipelineFetcherProtocol {
         
         if let endDate = endDate {
             parameters["end_date"] = endDate.toString(format: "YYYY-MM-dd", setTimeTo: "23:59:59")
+        }
+        
+        if let isChecked = isChecked {
+            parameters["is_checked"] = isChecked
         }
         
         networkService.request(
