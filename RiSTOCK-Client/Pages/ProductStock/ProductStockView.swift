@@ -93,28 +93,6 @@ struct ProductStockView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            headerSection()
-            
-            SearchAndFilter(
-                searchText: $viewModel.searchText,
-                isChecked: $viewModel.isChecked,
-                isSearchFieldFocused: $isSearchFieldFocused
-            )
-            
-            searchAndFilterSection()
-            productListSection()
-        }
-        .background(Color.gray.opacity(0.05))
-        .edgesIgnoringSafeArea(.all)
-        .onTapGesture {
-            isSearchFieldFocused = false
-        }
-    }
-
-    // MARK: - Header Section
-    @ViewBuilder
-    private func headerSection() -> some View {
-        VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text("Cek Stok Produk")
                     .font(.largeTitle.weight(.bold))
@@ -131,6 +109,33 @@ struct ProductStockView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal)
+            .padding(.top, 50)
+            
+            SearchAndFilter(
+                searchText: $viewModel.searchText,
+                isChecked: $viewModel.isChecked,
+                isSearchFieldFocused: $isSearchFieldFocused
+            )
+            
+            if !isSearchFieldFocused {
+                headerSection()
+                    .animation(.bouncy, value: !isSearchFieldFocused)
+            }
+            
+            productListSection()
+                .animation(.bouncy, value: !isSearchFieldFocused)
+        }
+        .background(Color.gray.opacity(0.05))
+        .edgesIgnoringSafeArea(.all)
+        .onTapGesture {
+            isSearchFieldFocused = false
+        }
+    }
+    
+    // MARK: - Header Section
+    @ViewBuilder
+    private func headerSection() -> some View {
+        VStack(alignment: .leading, spacing: 15) {
             
             HStack(spacing: 10) {
                 ForEach(StockStatus.allCases, id: \.self) { status in
@@ -139,61 +144,6 @@ struct ProductStockView: View {
             }
             .padding(.horizontal)
         }
-        .padding(.top, 50)
-        .padding(.bottom, 10)
-    }
-
-    // MARK: - Search & Filter Section
-    @ViewBuilder
-    private func searchAndFilterSection() -> some View {
-        VStack(spacing: 15) {
-            // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                TextField("Cari produk...", text: $viewModel.searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .focused($isSearchFieldFocused)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            .padding(.horizontal)
-            
-            // Filter Chips
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    Image(systemName: "slider.horizontal.3")
-                        .foregroundColor(StockStatus.low.accentColor.swiftUIColor)
-                        .padding(8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                        )
-                    
-                    ForEach(StockStatus.allCases, id: \.self) { status in
-                        Text(status.rawValue)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Token.white.swiftUIColor)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Token.primary500.swiftUIColor)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                    )
-                            )
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 5)
-            }
-        }
-        .background(Color.white)
-        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 3)
     }
 
     // MARK: - Product List Section

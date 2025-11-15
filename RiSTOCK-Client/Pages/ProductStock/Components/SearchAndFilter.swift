@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+// MARK: - SearchAndFilter View
 struct SearchAndFilter: View {
     @Binding var searchText: String
     @Binding var isChecked: Bool?
@@ -16,28 +17,73 @@ struct SearchAndFilter: View {
     
     @State private var isFilterPresented: Bool = false
     
+    func cancelSearchIsTapped() {
+        isSearchFieldFocused = false
+    }
+    
+    func clearSearchIsTapped() {
+        searchText = ""
+    }
+    
+    func filterButtonIsTapped() {
+        isFilterPresented.toggle()
+    }
+    
     var body: some View {
         HStack(spacing: 8) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(Color(uiColor: .systemGray))
+                    .foregroundColor(Token.gray500.swiftUIColor)
                 
-                TextField("Search produk..", text: $searchText)
+                TextField("", text: $searchText)
+                    .placeholder(when: searchText.isEmpty) {
+                            Text("Search produk..")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Token.gray500.swiftUIColor)
+                    }
                     .disableAutocorrection(true)
+                    .focused($isSearchFieldFocused)
+                    .foregroundColor(Token.black.swiftUIColor)
+                    .animation(.bouncy, value: isSearchFieldFocused)
+                
+                Spacer()
+                
+                if !searchText.isEmpty {
+                    Button {
+                        clearSearchIsTapped()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(Token.gray200.swiftUIColor)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
-            .background(Color(uiColor: .systemGray6))
-            .clipShape(Capsule())
+            .background(Token.gray50.swiftUIColor)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
             
-            Button {
-                isFilterPresented.toggle()
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .foregroundColor(Color(uiColor: .systemGray))
-                    .padding(10)
-                    .background(Color(uiColor: .systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            if !isSearchFieldFocused {
+                Button {
+                    filterButtonIsTapped()
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .foregroundColor(Token.gray500.swiftUIColor)
+                        .padding(12)
+                        .background(Token.gray50.swiftUIColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+                .animation(.default, value: isSearchFieldFocused)
+            } else {
+                Button {
+                    cancelSearchIsTapped()
+                } label: {
+                    Text("Cancel")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Token.gray500.swiftUIColor)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal)
@@ -128,6 +174,7 @@ struct SearchAndFilter: View {
     }
 }
 
+// MARK: - Status Option Row for Filter Sheet
 struct StatusOptionRow: View {
     let name: String
     let statusValue: Bool
@@ -138,13 +185,17 @@ struct StatusOptionRow: View {
         selectedStatus == statusValue
     }
     
+    func optionIsTapped() {
+        if isSelected {
+            selectedStatus = nil
+        } else {
+            selectedStatus = statusValue
+        }
+    }
+    
     var body: some View {
         Button {
-            if isSelected {
-                selectedStatus = nil
-            } else {
-                selectedStatus = statusValue
-            }
+            optionIsTapped()
         } label: {
             HStack {
                 Text(name)
@@ -162,6 +213,7 @@ struct StatusOptionRow: View {
     }
 }
 
+// MARK: - Preview
 struct SearchAndFilter_PreviewContainer: View {
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
