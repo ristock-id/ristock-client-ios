@@ -92,6 +92,9 @@ struct ProductStockView: View {
         .refreshable {
             viewModel.resetPageAndFetch()
         }
+        .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
+            overlayContent(preferences: preferences)
+        }
     }
     
     // MARK: - Header Section
@@ -111,18 +114,16 @@ struct ProductStockView: View {
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
-        LazyVStack(spacing: 0) {
+        LazyVStack(spacing: 12) {
             ForEach(viewModel.products.indices, id: \.self) { index in
-                ProductRowView(
+                ProductRow(
                     index: index + 1,
-                    name: viewModel.products[index].name
+                    product: $viewModel.products[index],
+                    isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
                 )
                 .onAppear {
-                    let thresholdIndex = viewModel.products.count - 5
-                    
-                    let isNearEnd = index >= thresholdIndex
-                    
-                    if isNearEnd {
+                    let thresholdIndex = max(viewModel.products.count - 5, 0)
+                    if index >= thresholdIndex {
                         viewModel.loadNextPage()
                     }
                 }
@@ -133,6 +134,101 @@ struct ProductStockView: View {
                     .padding()
             }
         }
-        .padding(.top)
+        .padding(.top, 20)
+        .padding(.bottom, 40)
+        .padding(.horizontal)
+    }
+    
+    private func bindingForPopoverState(of productId: String) -> Binding<Bool> {
+        Binding(
+            get: {
+                isPopoverPresented[productId] ?? false
+            },
+            set: { newValue in
+                if newValue {
+                    isPopoverPresented = [productId: true]
+                } else {
+                    isPopoverPresented.removeValue(forKey: productId)
+                }
+            }
+        )
+    }
+    
+    @ViewBuilder
+    private func overlayContent(preferences: [String: Anchor<CGRect>]) -> some View {
+        if let activeProductId = activePopoverProductId,
+           let selectedProduct = viewModel.products.first(where: { $0.id == activeProductId }) {
+            StockStatusOverlay(
+                preferences: preferences,
+                activeProductId: activeProductId,
+                selectedStatus: selectedProduct.stockStatus,
+                onBackgroundTap: dismissPopovers,
+                onStatusSelected: { status in
+                    viewModel.updateStockStatus(for: activeProductId, to: status) { result in
+                        switch result {
+                        case .success:
+                            dismissPopover(for: activeProductId)
+                        case .failure(let error):
+                            print("Failed to update status for \(activeProductId): \(error)")
+                        }
+                    }
+                }
+            )
+        }
+    }
+    
+    private var activePopoverProductId: String? {
+        isPopoverPresented.first(where: { $0.value })?.key
+    }
+    
+    private func dismissPopovers() {
+        isPopoverPresented.removeAll()
+    }
+    
+    private func dismissPopover(for productId: String) {
+        isPopoverPresented.removeValue(forKey: productId)
+    }
+}
+
+struct ProductRowFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [String: Anchor<CGRect>] = [:]
+    
+    static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
+private struct StockStatusOverlay: View {
+    let preferences: [String: Anchor<CGRect>]
+    let activeProductId: String
+    let selectedStatus: StockStatus?
+    let onBackgroundTap: () -> Void
+    let onStatusSelected: (StockStatus) -> Void
+    
+    var body: some View {
+        GeometryReader { proxy in
+            if let anchor = preferences[activeProductId] {
+                let frame = proxy[anchor]
+                
+                ZStack(alignment: .topLeading) {
+                    Color.black.opacity(0.001)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            onBackgroundTap()
+                        }
+                    
+                    StatusSelectionList(
+                        onButtonClick: onStatusSelected,
+                        selectedStatus: selectedStatus
+                    )
+                    .fixedSize()
+                    .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                    .offset(
+                        x: frame.minX - 25,
+                        y: frame.minY - 40
+                    )
+                }
+            }
+        }
     }
 }
