@@ -10,8 +10,9 @@ import SwiftUI
 struct StockInfoCardView: View {
     @State private var isActive: Bool = false
     
-    let status: StockStatus
+    let status: CheckRecommendationStatus
     let count: Int
+    var callback: (Bool, CheckRecommendationStatus) -> Void
     
     var body: some View {
         ZStack {
@@ -76,6 +77,7 @@ struct StockInfoCardView: View {
         .frame(maxWidth: .infinity)
         .onTapGesture {
             isActive.toggle()
+            callback(isActive, status)
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -96,12 +98,12 @@ struct ProductStockView: View {
     @FocusState var isSearchFieldFocused: Bool
     
     var body: some View {
-        ScrollView {
+        Group {
             VStack(spacing: 0) {
                 HStack {
                     Text("Cek Stok Produk")
                         .font(.largeTitle.weight(.bold))
-                        .foregroundColor(Token.primary500.swiftUIColor)
+                        .foregroundColor(Color.black)
                     
                     Spacer()
                     
@@ -128,8 +130,14 @@ struct ProductStockView: View {
                         .animation(.bouncy, value: !isSearchFieldFocused)
                 }
                 
+                Spacer()
+                    .frame(height: 20)
+                
                 productListSection()
                     .animation(.bouncy, value: !isSearchFieldFocused)
+                    .refreshable {
+                        viewModel.resetPageAndFetch()
+                    }
             }
             .background(Token.white.swiftUIColor)
             .edgesIgnoringSafeArea(.all)
@@ -137,54 +145,60 @@ struct ProductStockView: View {
                 isSearchFieldFocused = false
             }
         }
-        .refreshable {
-            viewModel.resetPageAndFetch()
-        }
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
+        }
+    }
+    
+    private func selectCheckRecommendationFilter(isActive: Bool, checkRecommendation: CheckRecommendationStatus) {
+        if isActive {
+            viewModel.selectedCheckRecommendationFilter.insert(checkRecommendation)
+        } else {
+            viewModel.selectedCheckRecommendationFilter.remove(checkRecommendation)
         }
     }
     
     // MARK: - Header Section
     @ViewBuilder
     private func headerSection() -> some View {
-        VStack(alignment: .leading, spacing: 15) {
-            
             HStack(spacing: 10) {
-                StockInfoCardView(status: .out, count: viewModel.countCheckNow.updated)
-                StockInfoCardView(status: .low, count: viewModel.countCheckSoon.updated)
-                StockInfoCardView(status: .safe, count: viewModel.countCheckPeriodically.updated)
+                
+                StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
+                StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
+                StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
             }
             .padding(.horizontal)
-        }
+            .padding(.top, 20)
+            .frame(maxHeight: 77)
     }
 
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
-        LazyVStack(spacing: 12) {
-            ForEach(viewModel.products.indices, id: \.self) { index in
-                ProductRow(
-                    index: index + 1,
-                    product: $viewModel.products[index],
-                    isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
-                )
-                .onAppear {
-                    let thresholdIndex = max(viewModel.products.count - 5, 0)
-                    if index >= thresholdIndex {
-                        viewModel.loadNextPage()
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else {
+                    ForEach(viewModel.products.indices, id: \.self) { index in
+                        ProductRow(
+                            index: index + 1,
+                            product: $viewModel.products[index],
+                            isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
+                        )
+                        .onAppear {
+                            let thresholdIndex = max(viewModel.products.count - 5, 0)
+                            if index >= thresholdIndex {
+                                viewModel.loadNextPage()
+                            }
+                        }
                     }
                 }
             }
-            
-            if viewModel.isLoading {
-                ProgressView()
-                    .padding()
-            }
         }
-        .padding(.top, 20)
-        .padding(.bottom, 40)
         .padding(.horizontal)
+        .padding(.top, 5)
+        .padding(.bottom, 40)
     }
     
     private func bindingForPopoverState(of productId: String) -> Binding<Bool> {
@@ -326,7 +340,7 @@ private struct StockStatusOverlay: View {
 #Preview("Loading State") {
     let mockViewModel = ProductStockViewModel(
         pipelineFetcher: PipelineFetcher(),
-        deviceId: "mock-device-id"
+        deviceId: "e2eb2658-3a31-4566-b2a9-7b77c1352fc8"
     )
     mockViewModel.isLoading = true
     

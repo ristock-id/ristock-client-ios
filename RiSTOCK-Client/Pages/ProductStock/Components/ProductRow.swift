@@ -30,7 +30,6 @@ struct ProductRow: View {
         .padding(.leading, 12)
         .padding(.trailing, 30)
         .padding(.vertical, 13)
-        .frame(width: 351)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Token.gray500.swiftUIColor, lineWidth: 1)

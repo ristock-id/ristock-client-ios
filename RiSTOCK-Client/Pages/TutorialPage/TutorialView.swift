@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TutorialView: View {
+    var nextAction: () -> Void
     private let captionList: [Text] = [
         Text("Buka aplikasi ") +
         Text("RISTOCK")
@@ -40,8 +41,8 @@ struct TutorialView: View {
                     .padding(.bottom, 50)
                 Stepper(captionList: captionList)
                     .padding(.bottom, 130)
-                NavigationLink {
-                    // TODO: Next Page
+                Button {
+                    nextAction()
                 } label:{
                     Text("Scan QR Code")
                         .padding(15)
@@ -56,8 +57,4 @@ struct TutorialView: View {
             }
         }
     }
-}
-
-#Preview {
-    TutorialView()
 }

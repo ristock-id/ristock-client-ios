@@ -218,7 +218,7 @@ extension ProductStockViewModel {
                     // Summary
                     if let summary = response.data.summary {
                         self.countCheckNow = CheckCount(
-                            updated: summary.low ?? 0,
+                            updated: summary.high ?? 0,
                             total: response.data.total ?? 0
                         )
                         self.countCheckSoon = CheckCount(
@@ -226,7 +226,7 @@ extension ProductStockViewModel {
                             total: response.data.total ?? 0
                         )
                         self.countCheckPeriodically = CheckCount(
-                            updated: summary.high ?? 0,
+                            updated: summary.low ?? 0,
                             total: response.data.total ?? 0
                         )
                     }

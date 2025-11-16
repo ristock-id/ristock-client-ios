@@ -50,21 +50,7 @@ struct ContentView: View {
         } else {
             VStack(spacing: 20) {
                 // Tombol Buka Scanner
-                Button(action: {
-                    isProcessingImage = false
-                    // Reset error state sebelum membuka
-                    scannerPermissionError = nil
-                    showConnectionErrorModal = false
-                    isPresentingScanner = true
-                    
-                    requestSequentialPermissions()
-                }) {
-                    Text("Scan QR Code")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(RoundedRectangle(cornerRadius: 10).stroke())
-                }
+                TutorialView(nextAction: nextAction)
                 .padding(.horizontal)
                 .fullScreenCover(isPresented: $isPresentingScanner) {
                     ScannerView(
@@ -133,6 +119,18 @@ struct ContentView: View {
             }
             .padding()
         }
+    }
+}
+
+extension ContentView {
+    func nextAction() {
+        isProcessingImage = false
+        // Reset error state sebelum membuka
+        scannerPermissionError = nil
+        showConnectionErrorModal = false
+        isPresentingScanner = true
+        
+        requestSequentialPermissions()
     }
     
     private func requestSequentialPermissions() {

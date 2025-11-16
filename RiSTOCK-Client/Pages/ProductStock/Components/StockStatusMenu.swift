@@ -39,7 +39,7 @@ private struct StockStatusTag: View {
     
     var body: some View {
         HStack(spacing: 10) {
-            Text(status?.rawValue ?? "Stok")
+            Text(status?.filterString.capitalized ?? "Stok")
                 .font(.system(size: 16, weight: .regular))
                 .foregroundStyle(status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor)
                 .lineLimit(1)
@@ -85,11 +85,11 @@ struct StatusSelectionList: View {
                             strokeColor: Token.gray500.swiftUIColor,
                             fillColor: Token.primary600.swiftUIColor
                         )
-                        .frame(width: 25, height: 25)
+                        .frame(width: 18, height: 18)
                         .padding(.trailing, 5)
                         
-                        Text(statusOption.rawValue)
-                            .font(.system(size: 16, weight: .regular))
+                        Text(statusOption.filterString.capitalized)
+                            .font(.system(size: 15, weight: .regular))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -102,6 +102,7 @@ struct StatusSelectionList: View {
         .padding(6)
         .background(Color.white)
         .cornerRadius(10)
+        .offset(x:26, y: 77)
     }
 }
 
@@ -115,9 +116,14 @@ private struct StatusSelectionIndicator: View {
             .stroke(strokeColor, lineWidth: 2)
             .overlay(
                 Circle()
-                    .fill(fillColor)
-                    .padding(6)
+                    .fill(Token.primary600.swiftUIColor)
                     .opacity(isSelected ? 1 : 0)
+                    .overlay(
+                        Circle()
+                            .fill(Token.white.swiftUIColor)
+                            .padding(5)
+                            .opacity(isSelected ? 1 : 0)
+                    )
             )
     }
 }

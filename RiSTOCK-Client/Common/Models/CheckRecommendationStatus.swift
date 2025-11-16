@@ -7,14 +7,15 @@ enum CheckRecommendationStatus: String, CaseIterable {
     case soon = "Cek Segera"
     case periodically = "Cek Berkala"
     
+    
     var icon: Image {
         switch self {
-        case .now:
-            return Image(systemName: "exclamationmark.triangle.fill")
-        case .soon:
-            return Image(systemName: "bell.fill")
         case .periodically:
-            return Image(uiImage: RiSTOCKIcon.clockIconSuccess500.image)
+            Image("clock-success-400")
+        case .soon:
+            Image("bell")
+        case .now:
+            Image("warning")
         }
     }
     
