@@ -10,49 +10,25 @@ import Combine
 
 // MARK: - Stock Status Menu (Main View)
 struct StockStatusMenu: View {
-    @Binding var product: Product
-    var fetchStatusUpdate: ((String, StockStatus, @escaping (() -> Void)) -> Void)? = nil
-    
-    @State private var isPopoverPresented = false // State to manage popover visibility
-    
-    @Binding var isHovered: Bool
+    @Binding var product: ProductSummaryUI
+    @Binding var isPopoverPresented: Bool
     
     var body: some View {
-        // The Tag itself acts as the button trigger
         Button {
             isPopoverPresented.toggle()
         } label: {
             StockStatusTag(
-                status: {
-                    if let analysisUpdatedAt = product.analysisUpdatedAt {
-                        if product.stockStatus != nil && product.lastUpdated < analysisUpdatedAt {
-                            return nil
-                        }
-                    }
-                    return product.stockStatus
-                }(),
+                status: product.stockStatus,
                 isPresented: $isPopoverPresented,
-                isHovered: $isHovered
             )
         }
         .buttonStyle(.plain)
-        .popover(isPresented: $isPopoverPresented, arrowEdge: .bottom) {
-            StatusSelectionList(
-                onButtonClick: { selectedStatus in
-                    fetchStatusUpdate?(
-                        product.id,
-                        selectedStatus,
-                        {
-                            product.stockStatus = selectedStatus
-                            product.lastUpdated = Date()
-                        }
-                    )
-                },
-                isPresented: $isPopoverPresented
-            )
-            .ignoresSafeArea()
-            .fixedSize()
-        }
+        .background(
+            Color.clear.anchorPreference(
+                key: ProductRowFramePreferenceKey.self,
+                value: .bounds
+            ) { [product.id: $0] }
+        )
     }
 }
 
@@ -60,11 +36,10 @@ struct StockStatusMenu: View {
 private struct StockStatusTag: View {
     let status: StockStatus?
     @Binding var isPresented: Bool
-    @Binding var isHovered: Bool
     
     var body: some View {
         HStack(spacing: 10) {
-            Text(status?.rawValue ?? "Update Stock")
+            Text(status?.rawValue ?? "Stok")
                 .font(.system(size: 16, weight: .regular))
                 .foregroundStyle(status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor)
                 .lineLimit(1)
@@ -84,7 +59,7 @@ private struct StockStatusTag: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(status?.backgroundColor.swiftUIColor ?? Token.gray50.swiftUIColor)
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isHovered ? status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor : Token.transparent.swiftUIColor, lineWidth: 1)
+                    .stroke(status?.backgroundColor.swiftUIColor ?? Token.gray50.swiftUIColor)
             }
         )
         .contentShape(RoundedRectangle(cornerRadius: 8))
@@ -93,9 +68,9 @@ private struct StockStatusTag: View {
 
 
 // MARK: - Popover Content View
-private struct StatusSelectionList: View {
+struct StatusSelectionList: View {
     var onButtonClick: ((StockStatus) -> Void)? = nil
-    @Binding var isPresented: Bool
+    var selectedStatus: StockStatus?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -103,13 +78,15 @@ private struct StatusSelectionList: View {
                 
                 Button {
                     onButtonClick?(statusOption)
-                    isPresented = false
                 } label: {
                     HStack {
-                        Image(uiImage: RiSTOCKIcon.circleEmpty.image)
-                            .resizable()
-                            .frame(width: 25, height: 25)
-                            .padding(.trailing, 5)
+                        StatusSelectionIndicator(
+                            isSelected: statusOption == selectedStatus,
+                            strokeColor: Token.gray500.swiftUIColor,
+                            fillColor: Token.primary600.swiftUIColor
+                        )
+                        .frame(width: 25, height: 25)
+                        .padding(.trailing, 5)
                         
                         Text(statusOption.rawValue)
                             .font(.system(size: 16, weight: .regular))
@@ -125,5 +102,22 @@ private struct StatusSelectionList: View {
         .padding(6)
         .background(Color.white)
         .cornerRadius(10)
+    }
+}
+
+private struct StatusSelectionIndicator: View {
+    let isSelected: Bool
+    let strokeColor: Color
+    let fillColor: Color
+    
+    var body: some View {
+        Circle()
+            .stroke(strokeColor, lineWidth: 2)
+            .overlay(
+                Circle()
+                    .fill(fillColor)
+                    .padding(6)
+                    .opacity(isSelected ? 1 : 0)
+            )
     }
 }
