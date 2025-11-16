@@ -8,32 +8,80 @@
 import SwiftUI
 
 struct StockInfoCardView: View {
+    @State private var isActive: Bool = false
+    
     let status: StockStatus
+    let count: Int
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("123")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+        ZStack {
+            GeometryReader { geometry in
+                Path { path in
+                    let width = geometry.size.width
+                    let height = geometry.size.height
+                    
+                    path.move(to: CGPoint(x: width * 0.65, y: 0))
+                    
+                    path.addCurve(
+                        to: CGPoint(x: width * 0.7, y: height * 0.55),
+                        control1: CGPoint(x: width * 0.55, y: height * 0.2),
+                        control2: CGPoint(x: width * 0.5, y: height * 0.3)
+                    )
+                    
+                    path.addCurve(
+                        to: CGPoint(x: width * 0.7, y: height),
+                        control1: CGPoint(x: width * 0.8, y: height * 0.7),
+                        control2: CGPoint(x: width * 0.8, y: height * 0.8)
+                    )
+                    
+                    path.addLine(to: CGPoint(x: width, y: height))
+                    path.addLine(to: CGPoint(x: width, y: 0))
+                    path.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            isActive ? Token.primary400.swiftUIColor : Token.primary100.swiftUIColor,
+                            isActive ? Token.primary400.swiftUIColor : Token.primary100.swiftUIColor
+                        ]),
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
+                )
+            }
             
-            Text(status.rawValue)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.8))
-            
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("\(count)")
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
+                    
+                    Spacer()
+                    
+                    status.icon
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 24, maxHeight: 24)
+                }
+                .padding(.vertical, 2)
+                
+                Text(status.rawValue)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .onTapGesture {
+            isActive.toggle()
+        }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Token.primary500.swiftUIColor)
-                .overlay(
-                    Image(systemName: "circle.grid.3x3.fill")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Token.primary500.swiftUIColor)
-                        .padding([.top, .trailing], 8)
-                    , alignment: .topTrailing
-                )
+                .fill(isActive ? Token.primary600.swiftUIColor : Token.primary50.swiftUIColor)
         )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -103,9 +151,9 @@ struct ProductStockView: View {
         VStack(alignment: .leading, spacing: 15) {
             
             HStack(spacing: 10) {
-                ForEach(StockStatus.allCases, id: \.self) { status in
-                    StockInfoCardView(status: status)
-                }
+                StockInfoCardView(status: .out, count: viewModel.countCheckNow.updated)
+                StockInfoCardView(status: .low, count: viewModel.countCheckSoon.updated)
+                StockInfoCardView(status: .safe, count: viewModel.countCheckPeriodically.updated)
             }
             .padding(.horizontal)
         }
@@ -231,4 +279,56 @@ private struct StockStatusOverlay: View {
             }
         }
     }
+}
+
+#Preview("With Mock Data") {
+    let mockViewModel = ProductStockViewModel(
+        pipelineFetcher: PipelineFetcher(),
+        deviceId: "mock-device-id"
+    )
+    
+    mockViewModel.products = [
+        ProductSummaryUI(
+            id: "1",
+            index: 0,
+            name: "Product A",
+            checkRecommendation: .now,
+            stockStatus: .out,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        ),
+        ProductSummaryUI(
+            id: "2",
+            index: 1,
+            name: "Product B",
+            checkRecommendation: .soon,
+            stockStatus: .low,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        ),
+        ProductSummaryUI(
+            id: "3",
+            index: 2,
+            name: "Product C",
+            checkRecommendation: .periodically,
+            stockStatus: .safe,
+            updatedAt: Date(),
+            analysisUpdatedAt: Date()
+        )
+    ]
+    mockViewModel.countCheckNow = CheckCount(updated: 420, total: 5)
+    mockViewModel.countCheckSoon = CheckCount(updated: 999, total: 10)
+    mockViewModel.countCheckPeriodically = CheckCount(updated: 999, total: 15)
+    
+    return ProductStockView(viewModel: mockViewModel)
+}
+
+#Preview("Loading State") {
+    let mockViewModel = ProductStockViewModel(
+        pipelineFetcher: PipelineFetcher(),
+        deviceId: "mock-device-id"
+    )
+    mockViewModel.isLoading = true
+    
+    return ProductStockView(viewModel: mockViewModel)
 }
