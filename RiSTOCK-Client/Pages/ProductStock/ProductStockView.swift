@@ -177,10 +177,7 @@ struct ProductStockView: View {
     private func productListSection() -> some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else {
-                    ForEach(viewModel.products.indices, id: \.self) { index in
+                ForEach(viewModel.products.indices, id: \.self) { index in
                         ProductRow(
                             index: index + 1,
                             product: $viewModel.products[index],
@@ -193,7 +190,9 @@ struct ProductStockView: View {
                             }
                         }
                     }
-                }
+                if viewModel.isLoading {
+                    ProgressView()
+                } 
             }
         }
         .padding(.horizontal)
