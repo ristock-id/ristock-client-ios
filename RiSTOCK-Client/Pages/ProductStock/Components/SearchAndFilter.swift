@@ -160,7 +160,7 @@ struct SearchAndFilter: View {
                     .cornerRadius(2.5)
 
                 Text("Filter Cek Stok")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.customFont(size: 18, weight: .semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal)
@@ -171,7 +171,7 @@ struct SearchAndFilter: View {
                 VStack(alignment: .leading, spacing: 20) {
                     
                     Text("Status Cek")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.customFont(size: 15, weight: .semibold))
                         .padding(.top, 8)
                         .foregroundColor(.primary)
                     
@@ -201,7 +201,7 @@ struct SearchAndFilter: View {
                         filterSheetButtonRemoveFilterTapped()
                     }
                     .frame(maxWidth: .infinity)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.customFont(size: 15, weight: .medium))
                     .padding(.vertical, 12)
                     .background(Token.primary50.swiftUIColor)
                     .foregroundColor(Token.primary500.swiftUIColor)
@@ -211,7 +211,7 @@ struct SearchAndFilter: View {
                         filterSheetButtonApplyFilterTapped()
                     }
                     .frame(maxWidth: .infinity)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.customFont(size: 15, weight: .medium))
                     .padding(.vertical, 12)
                     .background(Token.primary500.swiftUIColor)
                     .foregroundColor(Token.white.swiftUIColor)
@@ -252,7 +252,7 @@ struct StatusOptionRow: View {
         } label: {
             HStack {
                 Text(name)
-                    .font(.system(size: 13))
+                    .font(.customFont(size: 13, weight: .regular))
                     .foregroundColor(Token.black.swiftUIColor)
                 
                 Spacer()

@@ -55,7 +55,7 @@ struct StockInfoCardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("\(count)")
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.customFont(size: 26, weight: .bold))
                         .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
                     
                     Spacer()
@@ -68,7 +68,7 @@ struct StockInfoCardView: View {
                 .padding(.vertical, 2)
                 
                 Text(status.rawValue)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.customFont(size: 12, weight: .medium))
                     .foregroundColor(isActive ? Token.white.swiftUIColor : Token.primary700.swiftUIColor)
             }
             .padding(.vertical, 12)
