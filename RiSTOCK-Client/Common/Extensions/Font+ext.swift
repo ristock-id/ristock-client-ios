@@ -9,5 +9,7 @@ import Foundation
 import SwiftUI
 
 extension Font {
-    
+    static func customFont(size: CGFloat, family: UIFont.FontFamily = .primary, weight: UIFont.Weight) -> Font {
+        return Font.custom(UIFont.resolveFontName(for: family, weight: weight), size: size)
+    }
 }

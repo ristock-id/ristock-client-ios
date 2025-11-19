@@ -35,10 +35,9 @@ struct SearchAndFilter: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(Token.gray500.swiftUIColor)
                 
-                TextField("", text: $searchText)
-                    .placeholder(when: searchText.isEmpty) {
-                            Text("Search produk..")
-                            .font(.system(size: 15))
+                    TextField("", text: $searchText).placeholder(when: searchText.isEmpty) {
+                        Text("Search produk..")
+                            .font(.customFont(size: 13, weight: .regular))
                             .foregroundStyle(Token.gray500.swiftUIColor)
                     }
                     .disableAutocorrection(true)
@@ -72,7 +71,7 @@ struct SearchAndFilter: View {
                         cancelSearchIsTapped()
                     } label: {
                         Text("Cancel")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.customFont(size: 13, weight: .medium))
                             .foregroundColor(Token.gray500.swiftUIColor)
                     }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
