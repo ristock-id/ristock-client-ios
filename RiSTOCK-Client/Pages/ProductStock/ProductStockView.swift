@@ -97,6 +97,8 @@ struct ProductStockView: View {
     
     @FocusState var isSearchFieldFocused: Bool
     
+    @Environment(\.accessibilityReduceMotion) var reduceMotion: Bool
+    
     var body: some View {
         Group {
             VStack(spacing: 0) {
@@ -127,14 +129,14 @@ struct ProductStockView: View {
                 
                 if !isSearchFieldFocused {
                     headerSection()
-                        .animation(.bouncy, value: !isSearchFieldFocused)
+                        .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                 }
                 
                 Spacer()
                     .frame(height: 20)
                 
                 productListSection()
-                    .animation(.bouncy, value: !isSearchFieldFocused)
+                    .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
