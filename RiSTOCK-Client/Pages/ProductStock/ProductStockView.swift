@@ -125,13 +125,12 @@ struct ProductStockView: View {
                     isSearchFieldFocused: $isSearchFieldFocused
                 )
                 
-                if !isSearchFieldFocused {
+                if viewModel.searchText.isEmpty || !isSearchFieldFocused {
                     headerSection()
                         .animation(.bouncy, value: !isSearchFieldFocused)
                 }
                 
-                Spacer()
-                    .frame(height: 20)
+                Spacer().frame(height: 20)
                 
                 productListSection()
                     .animation(.bouncy, value: !isSearchFieldFocused)
