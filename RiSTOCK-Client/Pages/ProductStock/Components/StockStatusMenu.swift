@@ -40,7 +40,7 @@ private struct StockStatusTag: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(status?.filterString.capitalized ?? "Stok")
-                .font(.system(size: 16, weight: .regular))
+                .font(.customFont(size: 16, weight: .regular))
                 .foregroundStyle(status?.accentColor.swiftUIColor ?? Token.gray500.swiftUIColor)
                 .lineLimit(1)
             
@@ -89,7 +89,7 @@ struct StatusSelectionList: View {
                         .padding(.trailing, 5)
                         
                         Text(statusOption.filterString.capitalized)
-                            .font(.system(size: 15, weight: .regular))
+                            .font(.customFont(size: 15, weight: .regular))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)

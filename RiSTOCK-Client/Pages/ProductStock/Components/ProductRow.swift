@@ -15,11 +15,11 @@ struct ProductRow: View {
     var body: some View {
         HStack(alignment: .center) {
             Text("\(index)")
-                .font(.system(size: 15, weight: .regular))
+                .font(.customFont(size: 15, weight: .regular))
                 .padding(.leading, 13)
             
             Text(product.name)
-                .font(.system(size: 15, weight: .regular))
+                .font(.customFont(size: 15, weight: .regular))
                 .padding(.horizontal, 13)
             
             Spacer()
