@@ -27,34 +27,47 @@ struct TutorialView: View {
             .fontWeight(.bold)
     ]
     
-    var body: some View{
+    var body: some View {
         NavigationStack {
-            VStack {
-                Spacer()
-                Text("Scan QR Code")
-                    .font(.system(size: 22, weight: .bold))
-                    .padding(.bottom, 50)
-                
-                Image("qr_tutorial")
-                    .resizable()
-                    .frame(width: 145, height: 145)
-                    .padding(.bottom, 50)
-                Stepper(captionList: captionList)
-                    .padding(.bottom, 130)
-                Button {
-                    nextAction()
-                } label:{
+            ScrollView {
+                VStack {
                     Text("Scan QR Code")
-                        .padding(15)
-                        .foregroundStyle(Color.white)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            Capsule()
-                                .foregroundStyle(Token.primary700.swiftUIColor)
-                                .padding(.horizontal)
-                        )
+                        .font(.customFont(size: 22, weight: .bold))
+                        .bold()
+                        .padding(.top, 40)
+                        .padding(.bottom, 50)
+
+                    Image("qr_tutorial")
+                        .resizable()
+                        .frame(width: 145, height: 145)
+                        .padding(.bottom, 50)
+
+                    Stepper(captionList: captionList)
+                        .padding(.bottom, 50)
+
+                    Spacer()
+                    
+                    Button {
+                        nextAction()
+                    } label: {
+                        Text("Scan QR Code")
+                            .padding(15)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                Capsule()
+                                    .foregroundStyle(Token.primary700.swiftUIColor)
+                                    .padding(.horizontal)
+                            )
+                    }
+                    .padding(.bottom, 20)
                 }
+                .frame(minHeight: UIScreen.main.bounds.height * 0.9)
             }
         }
     }
+}
+
+#Preview {
+    TutorialView(nextAction: {})
 }
