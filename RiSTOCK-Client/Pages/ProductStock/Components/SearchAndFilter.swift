@@ -28,6 +28,8 @@ struct SearchAndFilter: View {
     @State private var isCheckedForFilter: Bool? = nil
     
     @State private var showTrailingButton = true
+    
+    @Environment(\.accessibilityReduceMotion) var reduceMotion: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -62,8 +64,8 @@ struct SearchAndFilter: View {
             .padding(.horizontal, 12)
             .background(Token.gray50.swiftUIColor)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: isSearchFieldFocused)
-            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: showTrailingButton)
+            .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: isSearchFieldFocused)
+            .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: showTrailingButton)
 
             if showTrailingButton {
                 if isSearchFieldFocused {
@@ -100,22 +102,22 @@ struct SearchAndFilter: View {
         .onChange(of: isSearchFieldFocused) { _, focused in
             if focused {
                 // Step 1: expand immediately
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                     showTrailingButton = false
                 }
                 // Step 2: show Cancel slightly after (staged)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                         showTrailingButton = true
                     }
                 }
             } else {
                 // Reverse sequence
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                     showTrailingButton = false
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                         showTrailingButton = true
                     }
                 }
