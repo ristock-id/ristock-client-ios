@@ -64,6 +64,7 @@ struct TutorialView: View {
                 }
                 .frame(minHeight: UIScreen.main.bounds.height * 0.9)
             }
+            .scrollIndicators(.hidden)
         }
     }
 }
