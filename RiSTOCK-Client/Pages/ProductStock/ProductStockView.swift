@@ -99,6 +99,8 @@ struct ProductStockView: View {
     
     @Environment(\.accessibilityReduceMotion) var reduceMotion: Bool
     
+    @State var isLogoutAlertPresented: Bool = false
+    
     var body: some View {
         Group {
             VStack(spacing: 0) {
@@ -119,7 +121,7 @@ struct ProductStockView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal)
-                .padding(.top, 50)
+                .padding(.top, 80)
                 
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
@@ -162,23 +164,33 @@ struct ProductStockView: View {
     // MARK: - Header Section
     @ViewBuilder
     private func headerSection() -> some View {
-            HStack(spacing: 10) {
-                
+        HStack(spacing: 10) {
+            if viewModel.products.isEmpty && viewModel.isLoading {
+                ProductRowSkeleton().cornerRadius(8)
+                ProductRowSkeleton().cornerRadius(8)
+                ProductRowSkeleton().cornerRadius(8)
+            } else {
                 StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
                 StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
                 StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
             }
-            .padding(.horizontal)
-            .padding(.top, 20)
-            .frame(maxHeight: 77)
+        }
+        .padding(.horizontal)
+        .padding(.top, 20)
+        .frame(maxHeight: 77)
     }
 
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.products.indices, id: \.self) { index in
+            if viewModel.products.isEmpty && viewModel.isLoading {
+                ForEach(0..<10, id: \.self) {_ in
+                    ProductRowSkeleton().cornerRadius(8)
+                }
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.products.indices, id: \.self) { index in
                         ProductRow(
                             index: index + 1,
                             product: $viewModel.products[index],
@@ -191,14 +203,18 @@ struct ProductStockView: View {
                             }
                         }
                     }
-                if viewModel.isLoading {
-                    ProgressView()
-                } 
+                    
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                    
+                    Spacer().frame(height: 20)
+                }
             }
         }
+        .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
-        .padding(.bottom, 40)
     }
     
     private func bindingForPopoverState(of productId: String) -> Binding<Bool> {
@@ -295,6 +311,7 @@ private struct StockStatusOverlay: View {
     }
 }
 
+// MARK: Preview
 #Preview("With Mock Data") {
     let mockViewModel = ProductStockViewModel(
         pipelineFetcher: PipelineFetcher(),
