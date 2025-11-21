@@ -91,13 +91,15 @@ struct StockInfoCardView: View {
 
 struct ProductStockView: View {
     @StateObject var viewModel: ProductStockViewModel
-    @State private var isPopoverPresented: [String: Bool] = [:]
-    
-    @State var isChecked: Bool? = nil
     
     @FocusState var isSearchFieldFocused: Bool
     
     @Environment(\.accessibilityReduceMotion) var reduceMotion: Bool
+    
+    // TODO: Refactor alert presentation to ViewModel
+    @State var isLogoutAlertPresented: Bool = false
+    @State private var isPopoverPresented: [String: Bool] = [:]
+    @State var isChecked: Bool? = nil
     
     var body: some View {
         Group {
@@ -110,7 +112,7 @@ struct ProductStockView: View {
                     Spacer()
                     
                     Button {
-                        viewModel.logout()
+                        isLogoutAlertPresented = true
                     } label: {
                         Image(systemName: "arrow.right.square")
                             .font(.title2)
@@ -119,7 +121,7 @@ struct ProductStockView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal)
-                .padding(.top, 50)
+                .padding(.top, 80)
                 
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
@@ -149,8 +151,17 @@ struct ProductStockView: View {
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
         }
+        .alertRistock(
+            isPresented: $isLogoutAlertPresented,
+            title: "Keluar Akun?",
+            message: "Anda bisa login kembali saat mengecek di Hand Phone nanti.",
+            image: Image(uiImage: RiSTOCKIcon.logoutIcon.image),
+            onConfirm: { viewModel.logout() },
+            onCancel: { isLogoutAlertPresented = false }
+        )
     }
     
+    // TODO: Refactor this to ViewModel
     private func selectCheckRecommendationFilter(isActive: Bool, checkRecommendation: CheckRecommendationStatus) {
         if isActive {
             viewModel.selectedCheckRecommendationFilter.insert(checkRecommendation)
@@ -162,23 +173,33 @@ struct ProductStockView: View {
     // MARK: - Header Section
     @ViewBuilder
     private func headerSection() -> some View {
-            HStack(spacing: 10) {
-                
+        HStack(spacing: 10) {
+            if viewModel.products.isEmpty && viewModel.isLoading {
+                ProductRowSkeleton().cornerRadius(8)
+                ProductRowSkeleton().cornerRadius(8)
+                ProductRowSkeleton().cornerRadius(8)
+            } else {
                 StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
                 StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
                 StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
             }
-            .padding(.horizontal)
-            .padding(.top, 20)
-            .frame(maxHeight: 77)
+        }
+        .padding(.horizontal)
+        .padding(.top, 20)
+        .frame(maxHeight: 77)
     }
 
     // MARK: - Product List Section
     @ViewBuilder
     private func productListSection() -> some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.products.indices, id: \.self) { index in
+            if viewModel.products.isEmpty && viewModel.isLoading {
+                ForEach(0..<10, id: \.self) {_ in
+                    ProductRowSkeleton().cornerRadius(8)
+                }
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.products.indices, id: \.self) { index in
                         ProductRow(
                             index: index + 1,
                             product: $viewModel.products[index],
@@ -191,14 +212,18 @@ struct ProductStockView: View {
                             }
                         }
                     }
-                if viewModel.isLoading {
-                    ProgressView()
-                } 
+                    
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                    
+                    Spacer().frame(height: 20)
+                }
             }
         }
+        .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
-        .padding(.bottom, 40)
     }
     
     private func bindingForPopoverState(of productId: String) -> Binding<Bool> {
@@ -295,6 +320,7 @@ private struct StockStatusOverlay: View {
     }
 }
 
+// MARK: Preview
 #Preview("With Mock Data") {
     let mockViewModel = ProductStockViewModel(
         pipelineFetcher: PipelineFetcher(),

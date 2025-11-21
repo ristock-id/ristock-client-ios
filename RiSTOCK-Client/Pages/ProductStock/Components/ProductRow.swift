@@ -24,8 +24,10 @@ struct ProductRow: View {
             
             Spacer()
             
-            StockStatusMenu(product: $product,
-                            isPopoverPresented: $isPopoverPresented)
+            StockStatusMenu(
+                product: $product,
+                isPopoverPresented: $isPopoverPresented
+            )
         }
         .padding(.leading, 12)
         .padding(.trailing, 30)

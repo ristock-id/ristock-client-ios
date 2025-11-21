@@ -20,7 +20,7 @@ extension UIFont {
     ) -> String {
         switch (family, weight) {
         case (.primary, .regular): 
-            return "Inter-Black"
+            return "Inter-V"
         case (.primary, .semibold):
             return "Inter-SemiBold"
         case (.primary, .bold):

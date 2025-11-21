@@ -46,25 +46,25 @@ struct TutorialView: View {
                         .padding(.bottom, 50)
 
                     Spacer()
-                    
-                    Button {
-                        nextAction()
-                    } label: {
-                        Text("Scan QR Code")
-                            .padding(15)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                Capsule()
-                                    .foregroundStyle(Token.primary700.swiftUIColor)
-                                    .padding(.horizontal)
-                            )
-                    }
-                    .padding(.bottom, 20)
                 }
-                .frame(minHeight: UIScreen.main.bounds.height * 0.9)
+                
             }
             .scrollIndicators(.hidden)
+            
+            Button {
+                nextAction()
+            } label: {
+                Text("Scan QR Code")
+                    .padding(15)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        Capsule()
+                            .foregroundStyle(Token.primary700.swiftUIColor)
+                            .padding(.horizontal)
+                    )
+            }
+            .padding(.bottom, 20)
         }
     }
 }
