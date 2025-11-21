@@ -130,6 +130,8 @@ class ProductStockViewModel: ObservableObject {
     func resetPageAndFetch() {
         // Only fetch if the page is not already 1.
         // If it is 1, the `didSet` for `currentPage` will call fetchProducts().
+        self.products = []
+        
         if currentPage == 1 {
             fetchProductsSummary()
         } else {
