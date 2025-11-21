@@ -39,4 +39,6 @@ enum RiSTOCKIcon {
     static let circleEmpty: Icon = Icon(iconName: "circle-empty")
     
     static let export: Icon = Icon(iconName: "export")
+    
+    static let logoutIcon: Icon = Icon(iconName: "logout-icon")
 }

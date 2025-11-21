@@ -91,15 +91,15 @@ struct StockInfoCardView: View {
 
 struct ProductStockView: View {
     @StateObject var viewModel: ProductStockViewModel
-    @State private var isPopoverPresented: [String: Bool] = [:]
-    
-    @State var isChecked: Bool? = nil
     
     @FocusState var isSearchFieldFocused: Bool
     
     @Environment(\.accessibilityReduceMotion) var reduceMotion: Bool
     
+    // TODO: Refactor alert presentation to ViewModel
     @State var isLogoutAlertPresented: Bool = false
+    @State private var isPopoverPresented: [String: Bool] = [:]
+    @State var isChecked: Bool? = nil
     
     var body: some View {
         Group {
@@ -112,7 +112,7 @@ struct ProductStockView: View {
                     Spacer()
                     
                     Button {
-                        viewModel.logout()
+                        isLogoutAlertPresented = true
                     } label: {
                         Image(systemName: "arrow.right.square")
                             .font(.title2)
@@ -151,8 +151,17 @@ struct ProductStockView: View {
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
         }
+        .alertRistock(
+            isPresented: $isLogoutAlertPresented,
+            title: "Keluar Akun?",
+            message: "Anda bisa login kembali saat mengecek di Hand Phone nanti.",
+            image: Image(uiImage: RiSTOCKIcon.logoutIcon.image),
+            onConfirm: { viewModel.logout() },
+            onCancel: { isLogoutAlertPresented = false }
+        )
     }
     
+    // TODO: Refactor this to ViewModel
     private func selectCheckRecommendationFilter(isActive: Bool, checkRecommendation: CheckRecommendationStatus) {
         if isActive {
             viewModel.selectedCheckRecommendationFilter.insert(checkRecommendation)
