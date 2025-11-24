@@ -39,7 +39,6 @@ struct StockUpdateView: View {
             )
             //Atur tinggi sheet
             .presentationDetents([.height(400)])
-//            .presentationDragIndicator(.visible) //Gray handlebar
             .presentationCornerRadius(24)
             .frame(maxWidth: .infinity)
         }
@@ -55,6 +54,9 @@ struct InputStockSheet: View {
     
     @State private var quantity: Int
     @State private var quantityString: String
+    @State private var isLongPressingMinus = false
+    @State private var isLongPressingPlus = false
+    @State private var longPressTimer: Timer?
     
     init(isPresented: Binding<Bool>, initialStock: Int, productName: String, onSave: @escaping (Int) -> Void) {
         self._isPresented = isPresented
@@ -88,14 +90,28 @@ struct InputStockSheet: View {
             }
             
             HStack(spacing: 20) {
-                Button(action: decrement) {
+                Button(action: {}) {
                     Image(systemName: "minus")
                         .font(.system(size: 24, weight: .bold))
                         .frame(width: 50, height: 50)
                         .foregroundColor(quantityString != "0" ? Token.primary600.swiftUIColor : Token.gray500.swiftUIColor)
                         .background(quantityString != "0" ? Token.primary50.swiftUIColor : Token.gray50.swiftUIColor)
                         .clipShape(Circle())
+                        .scaleEffect(isLongPressingMinus ? 0.95 : 1.0)
                 }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            if !isLongPressingMinus {
+                                isLongPressingMinus = true
+                                startDecrementTimer()
+                            }
+                        }
+                        .onEnded { _ in
+                            stopTimer()
+                            isLongPressingMinus = false
+                        }
+                )
                 
                 // Text Field Input
                 TextField("0", text: $quantityString)
@@ -112,7 +128,7 @@ struct InputStockSheet: View {
                     }
                 
                 // Increment Button
-                Button(action: increment) {
+                Button(action: {}) {
                     Image(systemName: "plus")
                         .font(.system(size: 24, weight: .bold))
                         .frame(width: 50, height: 50)
@@ -120,6 +136,19 @@ struct InputStockSheet: View {
                         .background(Token.primary500.swiftUIColor)
                         .clipShape(Circle())
                 }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            if !isLongPressingPlus {
+                                isLongPressingPlus = true
+                                startIncrementTimer()
+                            }
+                        }
+                        .onEnded { _ in
+                            stopTimer()
+                            isLongPressingPlus = false
+                        }
+                )
             }
             .padding(.vertical, 10)
             
@@ -179,14 +208,47 @@ struct InputStockSheet: View {
         }
     }
     
-    func increment() {
-        quantity += 1
+    func increment(by amount: Int = 1) {
+        quantity += amount
         quantityString = String(quantity)
     }
     
-    func decrement() {
-        quantity = max(0, quantity - 1)
+    func decrement(by amount: Int = 1) {
+        quantity = max(0, quantity - amount)
         quantityString = String(quantity)
+    }
+    
+    func startIncrementTimer() {
+        increment(by: 1)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard self.isLongPressingPlus else { return }
+            
+            self.longPressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+                self.increment(by: 10)
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
+            }
+        }
+    }
+    
+    func startDecrementTimer() {
+        decrement(by: 1)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard self.isLongPressingMinus else { return }
+            
+            self.longPressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+                self.decrement(by: 10)
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
+            }
+        }
+    }
+    
+    func stopTimer() {
+        longPressTimer?.invalidate()
+        longPressTimer = nil
     }
     
     func handleTextChange(_ newValue: String) {
