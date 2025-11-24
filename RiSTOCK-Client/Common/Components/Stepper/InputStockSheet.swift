@@ -18,7 +18,7 @@ struct StockUpdateView: View {
             Button(action: {
                 showInputSheet.toggle()
             }) {
-                HStack {
+                HStack {    
                     Image(systemName: "plus.circle.fill")
                 }
                 .padding()
@@ -57,6 +57,8 @@ struct InputStockSheet: View {
     @State private var isLongPressingMinus = false
     @State private var isLongPressingPlus = false
     @State private var longPressTimer: Timer?
+    @State private var updateAmount: Int
+    @State private var updateAmountString: String
     
     init(isPresented: Binding<Bool>, initialStock: Int, productName: String, onSave: @escaping (Int) -> Void) {
         self._isPresented = isPresented
@@ -65,6 +67,8 @@ struct InputStockSheet: View {
         self.onSave = onSave
         self._quantity = State(initialValue: initialStock)
         self._quantityString = State(initialValue: String(initialStock))
+        self._updateAmount = State(initialValue: 0)
+        self._updateAmountString = State(initialValue: "0")
     }
     
     var body: some View {
@@ -77,7 +81,7 @@ struct InputStockSheet: View {
                     .cornerRadius(2.5)
                     .padding(.top, 30)
                 
-                Text("Input Stok")
+                Text(initialStock == 0 ? "Input Stok" : "Update Stok")
                     .font(.system(size: 18, weight: .semibold))
                     .padding(.top, 20)
                 
@@ -114,7 +118,7 @@ struct InputStockSheet: View {
                 )
                 
                 // Text Field Input
-                TextField("0", text: $quantityString)
+                TextField("0", text: $updateAmountString)
                     .font(.system(size: 28, weight: .semibold))
                     .multilineTextAlignment(.center)
                     .keyboardType(.numberPad)
@@ -123,7 +127,7 @@ struct InputStockSheet: View {
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Token.gray500.swiftUIColor, lineWidth: 1)
                     )
-                    .onChange(of: quantityString) { newValue in
+                    .onChange(of: updateAmountString) { newValue in
                         handleTextChange(newValue)
                     }
                 
@@ -176,6 +180,7 @@ struct InputStockSheet: View {
             // 4. Action Buttons (Cancel / Save)
             HStack(spacing: 16) {
                 Button(action: {
+                    stopTimer()
                     isPresented = false
                 }) {
                     Text("Cancel")
@@ -188,6 +193,7 @@ struct InputStockSheet: View {
                 }
                 
                 Button(action: {
+                    stopTimer()
                     onSave(quantity)
                     isPresented = false
                 }) {
@@ -206,16 +212,25 @@ struct InputStockSheet: View {
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
+        .onDisappear {
+            stopTimer()
+        }
     }
     
     func increment(by amount: Int = 1) {
-        quantity += amount
-        quantityString = String(quantity)
+        updateAmount += amount
+        quantity = initialStock + updateAmount
+        updateAmountString = String(updateAmount)
     }
     
     func decrement(by amount: Int = 1) {
-        quantity = max(0, quantity - amount)
-        quantityString = String(quantity)
+        updateAmount -= amount
+        
+        if initialStock + updateAmount < 0 {
+            updateAmount = -initialStock
+        }
+        quantity = initialStock + updateAmount
+        updateAmountString = String(updateAmount)
     }
     
     func startIncrementTimer() {
@@ -252,17 +267,32 @@ struct InputStockSheet: View {
     }
     
     func handleTextChange(_ newValue: String) {
-        let filtered = newValue.filter { $0.isNumber }
+        var filtered = newValue
+        
+        let hasMinusPrefix = newValue.hasPrefix("-")
+        
+        if hasMinusPrefix {
+            let digitsOnly = String(newValue.dropFirst()).filter { $0.isNumber }
+            filtered = digitsOnly.isEmpty ? "-" : "-" + digitsOnly
+        } else {
+            filtered = newValue.filter { $0.isNumber }
+        }
         
         if filtered != newValue {
-            quantityString = filtered
+            updateAmountString = filtered
         }
         
         if let value = Int(filtered) {
-            quantity = value
+            updateAmount = value
+            if initialStock + updateAmount < 0 {
+                updateAmount = -initialStock
+                updateAmountString = String(updateAmount)
+            }
+            quantity = initialStock + updateAmount
         } else {
-            if filtered.isEmpty {
-                quantity = 0
+            if filtered.isEmpty || filtered == "-" {
+                updateAmount = 0
+                quantity = initialStock
             }
         }
     }
