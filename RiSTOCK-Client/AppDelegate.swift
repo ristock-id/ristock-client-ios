@@ -7,6 +7,7 @@
 
 import UIKit
 import UserNotifications
+import Foundation
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -31,8 +32,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        
         print("Device Token: \(tokenString)")
-        // Send this token to your server
+        UserDefaults.standard.set(tokenString, forKey: "deviceToken")
+        UserDefaults.standard.synchronize()
     }
 
     func application(_ application: UIApplication,
