@@ -180,9 +180,8 @@ struct ProductStockView: View {
                 ProductRowSkeleton().cornerRadius(8)
                 ProductRowSkeleton().cornerRadius(8)
             } else {
-                StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
+                ProductInsightHeader(viewModel: viewModel)
+                    .modifier(CardBackgroundModifier())
             }
         }
         .padding(.horizontal)

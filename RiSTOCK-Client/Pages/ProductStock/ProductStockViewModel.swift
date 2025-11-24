@@ -86,6 +86,20 @@ class ProductStockViewModel: ObservableObject {
     @Published var startDate: Date = Date.distantPast
     @Published var endDate: Date = Date.distantFuture
     
+    // TODO: - New UI Properties Need To Be Updated After API Integration
+    @Published var bestSellersCount: Int = 0
+    @Published var bestSellersPct: Double = 0.0
+    @Published var normalProductsCount: Int = 0
+    @Published var normalProductsPct: Double = 0.0
+        
+    @Published var totalStockFilled: Int = 0
+    @Published var safeCount: Int = 0
+    @Published var safePct: Double = 0.0
+    @Published var lowCount: Int = 0
+    @Published var lowPct: Double = 0.0
+    @Published var outCount: Int = 0
+    @Published var outPct: Double = 0.0
+    
     @Published var isChecked: Bool? = nil {
         didSet { resetPageAndFetch() }
     }
