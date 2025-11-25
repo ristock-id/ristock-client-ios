@@ -23,6 +23,10 @@ struct ProductSummaryUI: Identifiable, Equatable {
         return updatedAt < analysisUpdatedAt
     }
     
+    // This is new attribute after version DEV-161
+    var rop: Int?
+    var stockAmount: Int?
+    
     /// This is mock data for testing purposes or UI previews.
     static let mockData = ProductSummaryUI(
         id: "prod_001",
@@ -31,7 +35,9 @@ struct ProductSummaryUI: Identifiable, Equatable {
         checkRecommendation: .now,
         stockStatus: .low,
         updatedAt: Date(),
-        analysisUpdatedAt: Date().addingTimeInterval(-86400)
+        analysisUpdatedAt: Date().addingTimeInterval(-86400),
+        rop: 15,
+        stockAmount: 10
     )
 }
 
@@ -65,12 +71,22 @@ struct ProductSummaryCount: JSONDecodable {
     let high: Int?
     let medium: Int?
     let total: Int?
+    
+    // This is new attribute after version DEV-161
+    let empty: Int?
+    let safe: Int?
+    let almost: Int?
+    let out: Int?
 
     private enum CodingKeys: String, CodingKey {
         case low = "Low"
         case high = "High"
         case medium = "Medium"
         case total
+        case empty = "null"
+        case safe = "Aman"
+        case almost = "Menipis"
+        case out = "Habis"
     }
 }
 
@@ -84,7 +100,11 @@ struct ProductSummary: JSONDecodable {
     let stockStatus: String?
     let updatedAt: String?
     let analysisUpdatedAt: String?
-
+    
+    // This is new attribute after version DEV-161
+    let rop: Int?
+    let stockAmount: Int?
+    
     private enum CodingKeys: String, CodingKey {
         case id
         case productName = "Product Name"
@@ -95,6 +115,8 @@ struct ProductSummary: JSONDecodable {
         case stockStatus = "stock_status"
         case updatedAt = "updated_at"
         case analysisUpdatedAt = "analysis_update_at"
+        case rop = "rop"
+        case stockAmount = "stock_amount"
     }
 }
 
@@ -102,13 +124,15 @@ struct ProductSummary: JSONDecodable {
 extension ProductSummary {
     func toProductSummaryUI(index: Int) -> ProductSummaryUI {
         ProductSummaryUI(
-            id: id,
+            id: self.id,
             index: index,
-            name: productName ?? "Unknown Product",
-            checkRecommendation: CheckRecommendationStatus.from(priorityLevel),
-            stockStatus: StockStatus.from(restockStatus),
-            updatedAt: updatedAt?.toDate(),
-            analysisUpdatedAt: analysisUpdatedAt?.toDate(),
+            name: self.productName ?? "Unknown Product",
+            checkRecommendation: CheckRecommendationStatus.from(self.priorityLevel),
+            stockStatus: StockStatus.from(self.stockStatus),
+            updatedAt: self.updatedAt?.toDate(),
+            analysisUpdatedAt: self.analysisUpdatedAt?.toDate(),
+            rop: self.rop,
+            stockAmount: self.stockAmount
         )
     }
 }

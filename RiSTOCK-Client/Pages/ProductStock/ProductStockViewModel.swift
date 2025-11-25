@@ -56,7 +56,7 @@ class ProductStockViewModel: ObservableObject {
     @Published var endDateFilter: Date? = nil {
         didSet { resetPageAndFetch() }
     }
-
+    
     // MARK: - Pagination
     // These properties also trigger a new API call.
     @Published var selectedPageSize = 20 {
@@ -91,7 +91,7 @@ class ProductStockViewModel: ObservableObject {
     @Published var bestSellersPct: Double = 0.0
     @Published var normalProductsCount: Int = 0
     @Published var normalProductsPct: Double = 0.0
-        
+    
     @Published var totalStockFilled: Int = 0
     @Published var safeCount: Int = 0
     @Published var safePct: Double = 0.0
@@ -112,10 +112,10 @@ class ProductStockViewModel: ObservableObject {
     enum UpdateError: Error {
         case productNotFound
     }
-
+    
     // MARK: - Concurrency Control
     @Published private var currentRequestID = UUID()
-
+    
     // MARK: - Init
     init(pipelineFetcher: PipelineFetcherProtocol = PipelineFetcher(), deviceId: String) {
         self.pipelineFetcher = pipelineFetcher
@@ -164,19 +164,32 @@ class ProductStockViewModel: ObservableObject {
         // Calling resetPageAndFetch() is not needed here,
         // as changing the properties above will trigger it.
     }
-
+    
     // Refresh view explicitly, recomputing everything
     func forceRefresh() {
         // Re-fetch both summary and product data
         fetchProductsSummary()
     }
-
+    
     func loadNextPage() {
         guard !self.isLoading && self.currentPage < self.totalPages else { return }
         
         self.currentPage += 1
         
         self.fetchProductsSummary(isAppending: true)
+    }
+    
+    private func recalculateStockPercentages() {
+        let totalAll = safeCount + lowCount + outCount
+        if totalAll > 0 {
+            self.safePct = Double(safeCount) / Double(totalAll)
+            self.lowPct = Double(lowCount) / Double(totalAll)
+            self.outPct = Double(outCount) / Double(totalAll)
+        } else {
+            self.safePct = 0.0
+            self.lowPct = 0.0
+            self.outPct = 0.0
+        }
     }
 }
 
@@ -245,6 +258,21 @@ extension ProductStockViewModel {
                             updated: summary.low ?? 0,
                             total: response.data.total ?? 0
                         )
+                        
+                        self.bestSellersCount = summary.high ?? 0
+                        self.bestSellersPct = Double(summary.high ?? 0) / Double(summary.total ?? 0)
+                        self.normalProductsCount = (summary.medium ?? 0) + (summary.low ?? 0)
+                        self.normalProductsPct = 1 - self.bestSellersPct
+                        
+                        self.totalStockFilled = (summary.total ?? 0) - (summary.empty ?? 0)
+                        self.safeCount = summary.safe ?? 0
+                        self.safePct = Double(summary.safe ?? 0) == 0 ? 0 : Double(summary.safe ?? 0) / Double(self.totalStockFilled)
+                        self.lowCount = summary.almost ?? 0
+                        self.lowPct = Double(summary.almost ?? 0) == 0 ? 0 : Double(summary.almost ?? 0) / Double(self.totalStockFilled)
+                        self.outCount = summary.out ?? 0
+                        self.outPct = Double(summary.out ?? 0) == 0 ? 0 : Double(summary.out ?? 0) / Double(self.totalStockFilled)
+                        
+                        self.totalProducts = summary.total ?? 0
                     }
                     
                     // Update calendar filter start and end date
@@ -256,7 +284,7 @@ extension ProductStockViewModel {
                         self.endDate = maxUpdatedAt
                         self.validTill = maxUpdatedAt.addingTimeInterval(7 * 24 * 60 * 60) // +7 days
                     }
-
+                    
                     // Update error states based on the API response
                     if self.totalProducts == 0 {
                         if !self.searchText.isEmpty {

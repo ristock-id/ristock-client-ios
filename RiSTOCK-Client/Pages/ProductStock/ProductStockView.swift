@@ -102,7 +102,7 @@ struct ProductStockView: View {
     @State var isChecked: Bool? = nil
     
     var body: some View {
-        let showLandingState = viewModel.searchText.isEmpty || !isSearchFieldFocused
+        let showLandingState = !isSearchFieldFocused
         
         Group {
             VStack(spacing: 0) {
@@ -113,6 +113,7 @@ struct ProductStockView: View {
                                 .font(.system(size: 22))
                                 .fontWeight(.semibold)
                                 .foregroundColor(Token.white.swiftUIColor)
+                                .padding(.top)
                             
                             Spacer()
                             
@@ -127,6 +128,7 @@ struct ProductStockView: View {
                             .buttonStyle(.plain)
                         }
                         .padding(.horizontal)
+                        .padding(.bottom)
                         
                         headerSection()
                     }
@@ -140,6 +142,7 @@ struct ProductStockView: View {
                 )
                 .zIndex(1)
                 .offset(y: 30)
+                .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
                 
                 productListSection()
                     .refreshable {
@@ -227,6 +230,7 @@ struct ProductStockView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
                         // TODO: Perlu disamain isi parameter dan adjust di file lain
+                        ProductRow(index: index, product: $viewModel.products[index], onAddTap: {})
 //                        ProductRow(
 //                            index: index + 1,
 //                            product: $viewModel.products[index],

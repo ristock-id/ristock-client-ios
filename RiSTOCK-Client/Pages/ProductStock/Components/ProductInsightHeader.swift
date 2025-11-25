@@ -34,7 +34,6 @@ struct ProductInsightHeader: View {
                     .font(.system(size: 32, weight: .semibold))
                     .foregroundColor(Token.white.swiftUIColor)
             }
-            .padding(.leading, 16)
             .padding(.vertical, 16)
             
             VStack(alignment: .leading, spacing: 10) {
@@ -84,7 +83,7 @@ struct ProductInsightHeader: View {
             .padding(.trailing, 16)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .modifier(CardBackgroundModifier())
+//        .modifier(CardBackgroundModifier())
     }
     
     @ViewBuilder
