@@ -141,6 +141,7 @@ struct ProductStockView: View {
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
+                    .background(Token.white.swiftUIColor)
             }
             .background(Token.white.swiftUIColor)
             .edgesIgnoringSafeArea(.all)
@@ -197,6 +198,7 @@ struct ProductStockView: View {
                 ForEach(0..<10, id: \.self) {_ in
                     ProductRowSkeleton().cornerRadius(8)
                 }
+                .background(Token.white.swiftUIColor)
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
@@ -219,8 +221,10 @@ struct ProductStockView: View {
                     
                     Spacer().frame(height: 20)
                 }
+                .background(Token.white.swiftUIColor)
             }
         }
+        .background(Token.white.swiftUIColor)
         .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
