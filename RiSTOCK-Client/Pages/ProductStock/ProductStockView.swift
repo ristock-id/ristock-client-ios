@@ -105,43 +105,48 @@ struct ProductStockView: View {
         Group {
             VStack(spacing: 0) {
                 HStack {
-                    Text("Cek Stok Produk")
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(Color.black)
+                    Text("Update Stok Produk")
+                        .font(.system(size: 22))
+                        .fontWeight(.semibold)
+                        .foregroundColor(Token.white.swiftUIColor)
                     
                     Spacer()
                     
                     Button {
                         isLogoutAlertPresented = true
                     } label: {
-                        Image(systemName: "arrow.right.square")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                        Image("logout")
+                            .resizable()
+                            .frame(maxWidth: 18, maxHeight: 22)
+                            .foregroundColor(Token.white.swiftUIColor)
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal)
                 .padding(.top, 80)
                 
-                SearchAndFilter(
-                    searchText: $viewModel.searchText,
-                    isChecked: $viewModel.isChecked,
-                    isSearchFieldFocused: $isSearchFieldFocused
-                )
-                
                 if viewModel.searchText.isEmpty || !isSearchFieldFocused {
                     headerSection()
                         .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                 }
                 
-                Spacer().frame(height: 20)
+//                Spacer().frame(height: 20)
+                
+                SearchAndFilter(
+                    searchText: $viewModel.searchText,
+                    isChecked: $viewModel.isChecked,
+                    isSearchFieldFocused: $isSearchFieldFocused
+                )
+                .zIndex(1)
+                .offset(y: 30)
                 
                 productListSection()
                     .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
-                    .background(Color.clear)
+                    .background(Token.whiteF7.swiftUIColor)
+                    .cornerRadius(32)
             }
             .background(
                 MeshGradient(
@@ -250,6 +255,7 @@ struct ProductStockView: View {
                 ForEach(0..<10, id: \.self) {_ in
                     ProductRowSkeleton().cornerRadius(8)
                 }
+                .padding(.top, 40)
                 .background(Token.white.swiftUIColor)
             } else {
                 LazyVStack(spacing: 12) {
@@ -273,10 +279,11 @@ struct ProductStockView: View {
                     
                     Spacer().frame(height: 20)
                 }
-                .background(Token.white.swiftUIColor)
+                .padding(.top, 40)
+                .background(Token.whiteF7.swiftUIColor)
             }
         }
-        .background(Token.white.swiftUIColor)
+        .background(Token.whiteF7.swiftUIColor)
         .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
