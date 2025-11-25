@@ -201,17 +201,25 @@ struct ProductStockView: View {
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
-                        ProductRow(
-                            index: index + 1,
-                            product: $viewModel.products[index],
-                            isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
-                        )
-                        .onAppear {
-                            let thresholdIndex = max(viewModel.products.count - 5, 0)
-                            if index >= thresholdIndex {
-                                viewModel.loadNextPage()
-                            }
-                        }
+                        // TODO: Perlu disamain isi parameter dan adjust di file lain
+//                        ProductRow(
+//                            index: index + 1,
+//                            product: $viewModel.products[index],
+                            //stockAmount: nil or Int
+                            //minStock: ambil dari backend
+                            //stockStatus:
+                            //priority: ambil dari backend
+                            
+                            // Logic card diclick
+//                            onAddTap: {
+//                                // Kondisi stok kosong
+//                                if product.stockAmount == nil {
+//                                    // Sheet input stok
+//                                } else {
+//                                    // Sheet update stok
+//                                }
+//                            }
+//                        )
                     }
                     
                     if viewModel.isLoading {
