@@ -102,52 +102,76 @@ struct ProductStockView: View {
     @State var isChecked: Bool? = nil
     
     var body: some View {
+        let showLandingState = viewModel.searchText.isEmpty || !isSearchFieldFocused
+        
         Group {
             VStack(spacing: 0) {
-                HStack {
-                    Text("Cek Stok Produk")
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(Color.black)
-                    
-                    Spacer()
-                    
-                    Button {
-                        isLogoutAlertPresented = true
-                    } label: {
-                        Image(systemName: "arrow.right.square")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                if showLandingState {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Update Stok Produk")
+                                .font(.system(size: 22))
+                                .fontWeight(.semibold)
+                                .foregroundColor(Token.white.swiftUIColor)
+                            
+                            Spacer()
+                            
+                            Button {
+                                isLogoutAlertPresented = true
+                            } label: {
+                                Image("logout")
+                                    .resizable()
+                                    .frame(maxWidth: 18 , maxHeight: 22)
+                                    .foregroundColor(Token.white.swiftUIColor)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal)
+                        
+                        headerSection()
                     }
-                    .buttonStyle(.plain)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .padding(.horizontal)
-                .padding(.top, 80)
-                
+            
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
                     isChecked: $viewModel.isChecked,
                     isSearchFieldFocused: $isSearchFieldFocused
                 )
-                
-                if viewModel.searchText.isEmpty || !isSearchFieldFocused {
-                    headerSection()
-                        .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
-                }
-                
-                Spacer().frame(height: 20)
+                .zIndex(1)
+                .offset(y: 30)
                 
                 productListSection()
-                    .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
-                    .background(Token.white.swiftUIColor)
+                    .background(Token.whiteF7.swiftUIColor)
+                    .cornerRadius(32)
             }
-            .background(Token.white.swiftUIColor)
-            .edgesIgnoringSafeArea(.all)
-            .onTapGesture {
-                isSearchFieldFocused = false
+            .background {
+                ZStack {
+                    Token.whiteF7.swiftUIColor
+                        .ignoresSafeArea()
+                    
+                    MeshGradient(
+                        width: 4,
+                        height: 3,
+                        points: [
+                            .init(0.0, 0.0), .init(0.5, 0.0), .init(0.65, 0.0), .init(1.0, 0.0),
+                            .init(0.0, 0.15), .init(0.35, 0.15), .init(0.7, 0.15), .init(1.0, 0.15),
+                            .init(0.0, 0.4), .init(0.35, 0.4), .init(0.7, 0.4), .init(1.0, 0.4)
+                        ],
+                        colors: [
+                            Token.accent500.swiftUIColor, Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.primary600.swiftUIColor,
+                            Token.primary500.swiftUIColor, Token.primary600.swiftUIColor, Token.primary700.swiftUIColor, Token.primary700.swiftUIColor,
+                            Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.accent700.swiftUIColor, Token.accent500.swiftUIColor
+                        ]
+                    )
+                    .ignoresSafeArea()
+                    .opacity(showLandingState ? 1 : 0)
+                }
             }
+            .animation(.easeInOut(duration: 0.35), value: showLandingState)
         }
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
@@ -197,6 +221,7 @@ struct ProductStockView: View {
                 ForEach(0..<10, id: \.self) {_ in
                     ProductRowSkeleton().cornerRadius(8)
                 }
+                .padding(.top, 40)
                 .background(Token.white.swiftUIColor)
             } else {
                 LazyVStack(spacing: 12) {
@@ -228,10 +253,11 @@ struct ProductStockView: View {
                     
                     Spacer().frame(height: 20)
                 }
-                .background(Token.white.swiftUIColor)
+                .padding(.top, 40)
+                .background(Token.whiteF7.swiftUIColor)
             }
         }
-        .background(Token.white.swiftUIColor)
+        .background(Token.whiteF7.swiftUIColor)
         .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
