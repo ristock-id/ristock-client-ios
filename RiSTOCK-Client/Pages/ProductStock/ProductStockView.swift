@@ -141,9 +141,61 @@ struct ProductStockView: View {
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
-                    .background(Token.white.swiftUIColor)
+                    .background(Color.clear)
             }
-            .background(Token.white.swiftUIColor)
+            .background(
+                MeshGradient(
+                    width: 4,
+                    height: 3,
+                    points: [
+                        // Row 0 (top)
+                        [0.0, 0.0], [0.5, 0.0], [0.65, 0.0], [1.0, 0.0],
+                        // Row 1 (middle)
+                        [0.0, 0.15], [0.35, 0.15], [0.7, 0.15], [1.0, 0.15],
+                        // Row 2 (bottom)
+                        [0.0, 0.4], [0.35, 0.4], [0.7, 0.4], [1.0, 0.4]
+                    ],
+                    colors: [
+                        // Top row
+                        Token.accent500.swiftUIColor,
+                        Token.primary400.swiftUIColor,
+                        Token.primary600.swiftUIColor,
+                        Token.primary600.swiftUIColor,
+                        
+                        // Middle row
+                        Token.primary500.swiftUIColor,
+                        Token.primary600.swiftUIColor,
+                        Token.primary700.swiftUIColor,
+                        Token.primary700.swiftUIColor,
+                        
+                        // Bottom row
+                        Token.primary400.swiftUIColor,
+                        Token.primary600.swiftUIColor,
+                        Token.accent700.swiftUIColor,
+                        Token.accent500.swiftUIColor
+                    ]
+                )
+            )
+            //Vignette overlay
+            .overlay(
+                LinearGradient(
+                    gradient: Gradient(stops: [
+                        .init(color: Color.black.opacity(0.2), location: 0.0),
+                        .init(color: Color.black.opacity(0.05), location: 0.15),
+                        .init(color: Color.clear, location: 0.3)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay(
+                RadialGradient(
+                    gradient: Gradient(colors: [Color.white.opacity(0.06), Color.clear]),
+                    center: .bottomTrailing,
+                    startRadius: 2,
+                    endRadius: 300
+                )
+            )
             .edgesIgnoringSafeArea(.all)
             .onTapGesture {
                 isSearchFieldFocused = false
