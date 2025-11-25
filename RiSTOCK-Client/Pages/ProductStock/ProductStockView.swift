@@ -102,36 +102,37 @@ struct ProductStockView: View {
     @State var isChecked: Bool? = nil
     
     var body: some View {
+        let showLandingState = viewModel.searchText.isEmpty || !isSearchFieldFocused
+        
         Group {
             VStack(spacing: 0) {
-                if viewModel.searchText.isEmpty || !isSearchFieldFocused {
-                    HStack {
-                        Text("Update Stok Produk")
-                            .font(.system(size: 22))
-                            .fontWeight(.semibold)
-                            .foregroundColor(Token.white.swiftUIColor)
-                        
-                        Spacer()
-                        
-                        Button {
-                            isLogoutAlertPresented = true
-                        } label: {
-                            Image("logout")
-                                .resizable()
-                                .frame(maxWidth: 18 , maxHeight: 22)
+                if showLandingState {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Update Stok Produk")
+                                .font(.system(size: 22))
+                                .fontWeight(.semibold)
                                 .foregroundColor(Token.white.swiftUIColor)
+                            
+                            Spacer()
+                            
+                            Button {
+                                isLogoutAlertPresented = true
+                            } label: {
+                                Image("logout")
+                                    .resizable()
+                                    .frame(maxWidth: 18 , maxHeight: 22)
+                                    .foregroundColor(Token.white.swiftUIColor)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                        
+                        headerSection()
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 80)
-                    
-                    headerSection()
-                        .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                
-                Spacer().frame(height: 20)
-                
+            
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
                     isChecked: $viewModel.isChecked,
@@ -141,7 +142,6 @@ struct ProductStockView: View {
                 .offset(y: 30)
                 
                 productListSection()
-                    .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
@@ -149,48 +149,29 @@ struct ProductStockView: View {
                     .cornerRadius(32)
             }
             .background {
-                if viewModel.searchText.isEmpty || !isSearchFieldFocused {
+                ZStack {
+                    Token.whiteF7.swiftUIColor
+                        .ignoresSafeArea()
+                    
                     MeshGradient(
                         width: 4,
                         height: 3,
                         points: [
-                            // Row 0 (top)
-                            [0.0, 0.0], [0.5, 0.0], [0.65, 0.0], [1.0, 0.0],
-                            // Row 1 (middle)
-                            [0.0, 0.15], [0.35, 0.15], [0.7, 0.15], [1.0, 0.15],
-                            // Row 2 (bottom)
-                            [0.0, 0.4], [0.35, 0.4], [0.7, 0.4], [1.0, 0.4]
+                            .init(0.0, 0.0), .init(0.5, 0.0), .init(0.65, 0.0), .init(1.0, 0.0),
+                            .init(0.0, 0.15), .init(0.35, 0.15), .init(0.7, 0.15), .init(1.0, 0.15),
+                            .init(0.0, 0.4), .init(0.35, 0.4), .init(0.7, 0.4), .init(1.0, 0.4)
                         ],
                         colors: [
-                            // Top row
-                            Token.accent500.swiftUIColor,
-                            Token.primary400.swiftUIColor,
-                            Token.primary600.swiftUIColor,
-                            Token.primary600.swiftUIColor,
-                            
-                            // Middle row
-                            Token.primary500.swiftUIColor,
-                            Token.primary600.swiftUIColor,
-                            Token.primary700.swiftUIColor,
-                            Token.primary700.swiftUIColor,
-                            
-                            // Bottom row
-                            Token.primary400.swiftUIColor,
-                            Token.primary600.swiftUIColor,
-                            Token.accent700.swiftUIColor,
-                            Token.accent500.swiftUIColor
+                            Token.accent500.swiftUIColor, Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.primary600.swiftUIColor,
+                            Token.primary500.swiftUIColor, Token.primary600.swiftUIColor, Token.primary700.swiftUIColor, Token.primary700.swiftUIColor,
+                            Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.accent700.swiftUIColor, Token.accent500.swiftUIColor
                         ]
                     )
-                    .transition(.opacity)
-                } else {
-                    Token.whiteF7.swiftUIColor
+                    .ignoresSafeArea()
+                    .opacity(showLandingState ? 1 : 0)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: isSearchFieldFocused)
-            .edgesIgnoringSafeArea(.all)
-            .onTapGesture {
-                isSearchFieldFocused = false
-            }
+            .animation(.easeInOut(duration: 0.35), value: showLandingState)
         }
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
