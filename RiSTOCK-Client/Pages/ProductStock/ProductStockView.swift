@@ -204,9 +204,8 @@ struct ProductStockView: View {
                 ProductRowSkeleton().cornerRadius(8)
                 ProductRowSkeleton().cornerRadius(8)
             } else {
-                StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
+                ProductInsightHeader(viewModel: viewModel)
+                    .modifier(CardBackgroundModifier())
             }
         }
         .padding(.horizontal)
@@ -227,17 +226,25 @@ struct ProductStockView: View {
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
-                        ProductRow(
-                            index: index + 1,
-                            product: $viewModel.products[index],
-                            isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
-                        )
-                        .onAppear {
-                            let thresholdIndex = max(viewModel.products.count - 5, 0)
-                            if index >= thresholdIndex {
-                                viewModel.loadNextPage()
-                            }
-                        }
+                        // TODO: Perlu disamain isi parameter dan adjust di file lain
+//                        ProductRow(
+//                            index: index + 1,
+//                            product: $viewModel.products[index],
+                            //stockAmount: nil or Int
+                            //minStock: ambil dari backend
+                            //stockStatus:
+                            //priority: ambil dari backend
+                            
+                            // Logic card diclick
+//                            onAddTap: {
+//                                // Kondisi stok kosong
+//                                if product.stockAmount == nil {
+//                                    // Sheet input stok
+//                                } else {
+//                                    // Sheet update stok
+//                                }
+//                            }
+//                        )
                     }
                     
                     if viewModel.isLoading {
