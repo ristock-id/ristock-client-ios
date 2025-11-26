@@ -101,6 +101,9 @@ struct ProductStockView: View {
     @State private var isPopoverPresented: [String: Bool] = [:]
     @State var isChecked: Bool? = nil
     
+    @State private var showInputSheet = false
+    @State private var selectedProductForStockUpdate: ProductSummaryUI?
+    
     var body: some View {
         let showLandingState = !isSearchFieldFocused
         
@@ -179,6 +182,20 @@ struct ProductStockView: View {
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
         }
+        .sheet(isPresented: $showInputSheet) {
+            if let product = selectedProductForStockUpdate {
+                InputStockSheet(
+                    isPresented: $showInputSheet,
+                    initialStock: product.stockAmount ?? 0,
+                    productName: product.name,
+                    onSave: { _ in 
+                    }
+                )
+                .presentationDetents([.height(400)])
+                .presentationCornerRadius(24)
+                .frame(maxWidth: .infinity)
+            }
+        }
         .alertRistock(
             isPresented: $isLogoutAlertPresented,
             title: "Keluar Akun?",
@@ -230,7 +247,10 @@ struct ProductStockView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
                         // TODO: Perlu disamain isi parameter dan adjust di file lain
-                        ProductRow(index: index, product: $viewModel.products[index], onAddTap: {})
+                        ProductRow(index: index + 1, product: $viewModel.products[index], onAddTap: {
+                            self.selectedProductForStockUpdate = viewModel.products[index]
+                            self.showInputSheet = true
+                        })
 //                        ProductRow(
 //                            index: index + 1,
 //                            product: $viewModel.products[index],

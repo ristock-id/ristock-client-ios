@@ -51,24 +51,23 @@ struct InputStockSheet: View {
     let initialStock: Int
     let productName: String
     var onSave: (Int) -> Void
-    
-    @State private var quantity: Int
-    @State private var quantityString: String
+
+    @State private var delta: Int = 0
+    @State private var deltaString: String = "0"
+
     @State private var isLongPressingMinus = false
     @State private var isLongPressingPlus = false
     @State private var longPressTimer: Timer?
-    @State private var updateAmount: Int
-    @State private var updateAmountString: String
-    
+
+    private var finalQuantity: Int {
+        initialStock + delta
+    }
+
     init(isPresented: Binding<Bool>, initialStock: Int, productName: String, onSave: @escaping (Int) -> Void) {
         self._isPresented = isPresented
         self.initialStock = initialStock
         self.productName = productName
         self.onSave = onSave
-        self._quantity = State(initialValue: initialStock)
-        self._quantityString = State(initialValue: String(initialStock))
-        self._updateAmount = State(initialValue: 0)
-        self._updateAmountString = State(initialValue: "0")
     }
     
     var body: some View {
@@ -98,11 +97,12 @@ struct InputStockSheet: View {
                     Image(systemName: "minus")
                         .font(.system(size: 24, weight: .bold))
                         .frame(width: 50, height: 50)
-                        .foregroundColor(quantityString != "0" ? Token.primary600.swiftUIColor : Token.gray500.swiftUIColor)
-                        .background(quantityString != "0" ? Token.primary50.swiftUIColor : Token.gray50.swiftUIColor)
+                        .foregroundColor(finalQuantity > 0 ? Token.primary600.swiftUIColor : Token.gray500.swiftUIColor)
+                        .background(finalQuantity > 0 ? Token.primary50.swiftUIColor : Token.gray50.swiftUIColor)
                         .clipShape(Circle())
                         .scaleEffect(isLongPressingMinus ? 0.95 : 1.0)
                 }
+                .disabled(finalQuantity <= 0)
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { _ in
@@ -117,8 +117,7 @@ struct InputStockSheet: View {
                         }
                 )
                 
-                // Text Field Input
-                TextField("0", text: $updateAmountString)
+                TextField("0", text: $deltaString)
                     .font(.system(size: 28, weight: .semibold))
                     .multilineTextAlignment(.center)
                     .keyboardType(.numberPad)
@@ -127,11 +126,10 @@ struct InputStockSheet: View {
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Token.gray500.swiftUIColor, lineWidth: 1)
                     )
-                    .onChange(of: updateAmountString) { newValue in
+                    .onChange(of: deltaString) { newValue in
                         handleTextChange(newValue)
                     }
                 
-                // Increment Button
                 Button(action: {}) {
                     Image(systemName: "plus")
                         .font(.system(size: 24, weight: .bold))
@@ -139,8 +137,9 @@ struct InputStockSheet: View {
                         .foregroundColor(.white)
                         .background(Token.primary500.swiftUIColor)
                         .clipShape(Circle())
+                        .scaleEffect(isLongPressingPlus ? 0.95 : 1.0)
                 }
-                .simultaneousGesture(
+                 .simultaneousGesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { _ in
                             if !isLongPressingPlus {
@@ -156,7 +155,6 @@ struct InputStockSheet: View {
             }
             .padding(.vertical, 10)
             
-            // 3. Info & Preview (Minimum Stock & arrow transition)
             VStack(spacing: 8) {
                 Text("Minimum Stok: 100")
                     .foregroundColor(.primary)
@@ -170,14 +168,13 @@ struct InputStockSheet: View {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 25))
                         .foregroundColor(.gray)
-                    Text("\(quantity)")
+                    Text("\(finalQuantity)")
                         .fontWeight(.bold)
                         .font(.system(size: 25))
                 }
                 .padding(.bottom, 15)
             }
             
-            // 4. Action Buttons (Cancel / Save)
             HStack(spacing: 16) {
                 Button(action: {
                     stopTimer()
@@ -194,7 +191,7 @@ struct InputStockSheet: View {
                 
                 Button(action: {
                     stopTimer()
-                    onSave(quantity)
+                    onSave(finalQuantity)
                     isPresented = false
                 }) {
                     Text("Simpan")
@@ -217,23 +214,22 @@ struct InputStockSheet: View {
         }
     }
     
-    func increment(by amount: Int = 1) {
-        updateAmount += amount
-        quantity = initialStock + updateAmount
-        updateAmountString = String(updateAmount)
+    private func increment(by amount: Int) {
+        delta += amount
+        deltaString = String(delta)
     }
     
-    func decrement(by amount: Int = 1) {
-        updateAmount -= amount
-        
-        if initialStock + updateAmount < 0 {
-            updateAmount = -initialStock
+    private func decrement(by amount: Int) {
+        let newDelta = delta - amount
+        if initialStock + newDelta >= 0 {
+            delta = newDelta
+        } else {
+            delta = -initialStock
         }
-        quantity = initialStock + updateAmount
-        updateAmountString = String(updateAmount)
+        deltaString = String(delta)
     }
     
-    func startIncrementTimer() {
+    private func startIncrementTimer() {
         increment(by: 1)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -241,13 +237,12 @@ struct InputStockSheet: View {
             
             self.longPressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
                 self.increment(by: 10)
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         }
     }
     
-    func startDecrementTimer() {
+    private func startDecrementTimer() {
         decrement(by: 1)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -255,44 +250,33 @@ struct InputStockSheet: View {
             
             self.longPressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
                 self.decrement(by: 10)
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         }
     }
     
-    func stopTimer() {
+    private func stopTimer() {
         longPressTimer?.invalidate()
         longPressTimer = nil
     }
     
-    func handleTextChange(_ newValue: String) {
-        var filtered = newValue
-        
-        let hasMinusPrefix = newValue.hasPrefix("-")
-        
-        if hasMinusPrefix {
-            let digitsOnly = String(newValue.dropFirst()).filter { $0.isNumber }
-            filtered = digitsOnly.isEmpty ? "-" : "-" + digitsOnly
-        } else {
-            filtered = newValue.filter { $0.isNumber }
-        }
+    private func handleTextChange(_ newValue: String) {
+        let filtered = newValue.filter { "-0123456789".contains($0) }
         
         if filtered != newValue {
-            updateAmountString = filtered
+            deltaString = filtered
         }
         
         if let value = Int(filtered) {
-            updateAmount = value
-            if initialStock + updateAmount < 0 {
-                updateAmount = -initialStock
-                updateAmountString = String(updateAmount)
+            if initialStock + value < 0 {
+                delta = -initialStock
+                deltaString = String(delta)
+            } else {
+                delta = value
             }
-            quantity = initialStock + updateAmount
         } else {
             if filtered.isEmpty || filtered == "-" {
-                updateAmount = 0
-                quantity = initialStock
+                delta = 0
             }
         }
     }
