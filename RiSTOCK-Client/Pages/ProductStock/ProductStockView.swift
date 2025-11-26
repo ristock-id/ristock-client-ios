@@ -190,6 +190,7 @@ struct ProductStockView: View {
                 ),
                 initialStock: product.stockAmount ?? 0,
                 productName: product.name,
+                minimumStock: product.rop,
                 onSave: { newQuantity in
                     viewModel.fetchUpdateProductStock(with: product.id, to: newQuantity) {
                         viewModel.resetPageAndFetch()

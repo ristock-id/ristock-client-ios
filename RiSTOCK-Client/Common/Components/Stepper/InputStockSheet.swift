@@ -7,49 +7,12 @@
 
 import SwiftUI
 
-struct StockUpdateView: View {
-    //MARK: Button Edit Stock
-    @State private var showInputSheet = false
-    @State private var currentStock = 0
-    
-    var body: some View {
-        ZStack {
-            Color.gray.opacity(0.1).ignoresSafeArea()
-            Button(action: {
-                showInputSheet.toggle()
-            }) {
-                HStack {    
-                    Image(systemName: "plus.circle.fill")
-                }
-                .padding()
-                .cornerRadius(8)
-            }
-        }
-        // MARK: - The Sheet Logic
-        .sheet(isPresented: $showInputSheet) {
-            InputStockSheet(
-                isPresented: $showInputSheet,
-                initialStock: currentStock,
-                productName: "1lusin cetakan kue putu",
-                onSave: { newQuantity in
-                    // Inject data disini
-                    self.currentStock = newQuantity
-                    print("Stock updated to: \(newQuantity)")
-                }
-            )
-            //Atur tinggi sheet
-            .presentationDetents([.height(400)])
-            .presentationCornerRadius(24)
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
 // MARK: - Reusable Sheet Component
 struct InputStockSheet: View {
     @Binding var isPresented: Bool
     let initialStock: Int
     let productName: String
+    let minimumStock: Int?
     var onSave: (Int) -> Void
 
     @State private var delta: Int = 0
@@ -63,10 +26,11 @@ struct InputStockSheet: View {
         initialStock + delta
     }
 
-    init(isPresented: Binding<Bool>, initialStock: Int, productName: String, onSave: @escaping (Int) -> Void) {
+    init(isPresented: Binding<Bool>, initialStock: Int, productName: String, minimumStock: Int?, onSave: @escaping (Int) -> Void) {
         self._isPresented = isPresented
         self.initialStock = initialStock
         self.productName = productName
+        self.minimumStock = minimumStock
         self.onSave = onSave
     }
     
@@ -156,7 +120,7 @@ struct InputStockSheet: View {
             .padding(.vertical, 10)
             
             VStack(spacing: 8) {
-                Text("Minimum Stok: 100")
+                Text("Minimum Stok: \(minimumStock.map(String.init) ?? "-")")
                     .foregroundColor(.primary)
                     .font(.system(size: 16))
                     .padding(.bottom, 15)
@@ -282,11 +246,3 @@ struct InputStockSheet: View {
         }
     }
 }
-
-// MARK: - Preview
-struct StockUpdateView_Previews: PreviewProvider {
-    static var previews: some View {
-        StockUpdateView()
-    }
-}
-
