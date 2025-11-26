@@ -79,6 +79,9 @@ extension Token {
     @ColorElement(light: UIColor.from("#FFFFFF"), dark: UIColor.from("#FFFFFF"))
     static var white: UIColor
     
+    @ColorElement(light: UIColor.from("#F7F7F7"), dark: UIColor.from("#F7F7F7"))
+    static var whiteF7: UIColor
+    
     @ColorElement(light: UIColor.from("#161616"), dark: UIColor.from("#161616"))
     static var black: UIColor
 }

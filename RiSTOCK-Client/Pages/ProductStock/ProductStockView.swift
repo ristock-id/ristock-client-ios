@@ -101,56 +101,107 @@ struct ProductStockView: View {
     @State private var isPopoverPresented: [String: Bool] = [:]
     @State var isChecked: Bool? = nil
     
+    @State private var showInputSheet = false
+    @State private var selectedProductForStockUpdate: ProductSummaryUI?
+    
     var body: some View {
+        let showLandingState = !isSearchFieldFocused
+        
         Group {
             VStack(spacing: 0) {
-                HStack {
-                    Text("Cek Stok Produk")
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(Color.black)
-                    
-                    Spacer()
-                    
-                    Button {
-                        isLogoutAlertPresented = true
-                    } label: {
-                        Image(systemName: "arrow.right.square")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                if showLandingState {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Update Stok Produk")
+                                .font(.system(size: 22))
+                                .fontWeight(.semibold)
+                                .foregroundColor(Token.white.swiftUIColor)
+                                .padding(.top)
+                            
+                            Spacer()
+                            
+                            Button {
+                                isLogoutAlertPresented = true
+                            } label: {
+                                Image("logout")
+                                    .resizable()
+                                    .frame(maxWidth: 18 , maxHeight: 22)
+                                    .foregroundColor(Token.white.swiftUIColor)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                        
+                        headerSection()
                     }
-                    .buttonStyle(.plain)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .padding(.horizontal)
-                .padding(.top, 80)
-                
+            
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
                     isChecked: $viewModel.isChecked,
-                    isSearchFieldFocused: $isSearchFieldFocused
+                    selectedStockStatusFilter: $viewModel.selectedStockStatusFilter,
+                    isSearchFieldFocused: $isSearchFieldFocused,
+                    isCheckedForFilter: $viewModel.selectedStockAmountFilter
                 )
-                
-                if viewModel.searchText.isEmpty || !isSearchFieldFocused {
-                    headerSection()
-                        .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
-                }
-                
-                Spacer().frame(height: 20)
+                .zIndex(1)
+                .offset(y: 30) 
+                .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
                 
                 productListSection()
-                    .animation(reduceMotion ? nil : .bouncy, value: !isSearchFieldFocused)
                     .refreshable {
                         viewModel.resetPageAndFetch()
                     }
-                    .background(Token.white.swiftUIColor)
+                    .background(Token.whiteF7.swiftUIColor)
+                    .cornerRadius(32)
             }
-            .background(Token.white.swiftUIColor)
-            .edgesIgnoringSafeArea(.all)
-            .onTapGesture {
-                isSearchFieldFocused = false
+            .background {
+                ZStack {
+                    Token.whiteF7.swiftUIColor
+                        .ignoresSafeArea()
+                    
+                    MeshGradient(
+                        width: 4,
+                        height: 3,
+                        points: [
+                            .init(0.0, 0.0), .init(0.5, 0.0), .init(0.65, 0.0), .init(1.0, 0.0),
+                            .init(0.0, 0.15), .init(0.35, 0.15), .init(0.7, 0.15), .init(1.0, 0.15),
+                            .init(0.0, 0.4), .init(0.35, 0.4), .init(0.7, 0.4), .init(1.0, 0.4)
+                        ],
+                        colors: [
+                            Token.accent500.swiftUIColor, Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.primary600.swiftUIColor,
+                            Token.primary500.swiftUIColor, Token.primary600.swiftUIColor, Token.primary700.swiftUIColor, Token.primary700.swiftUIColor,
+                            Token.primary400.swiftUIColor, Token.primary600.swiftUIColor, Token.accent700.swiftUIColor, Token.accent500.swiftUIColor
+                        ]
+                    )
+                    .ignoresSafeArea()
+                    .opacity(showLandingState ? 1 : 0)
+                }
             }
+            .animation(.easeInOut(duration: 0.35), value: showLandingState)
         }
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
+        }
+        .sheet(item: $selectedProductForStockUpdate) { product in
+            InputStockSheet(
+                isPresented: Binding(
+                    get: { selectedProductForStockUpdate != nil },
+                    set: { if !$0 { selectedProductForStockUpdate = nil } }
+                ),
+                initialStock: product.stockAmount ?? 0,
+                productName: product.name,
+                minimumStock: product.rop,
+                onSave: { newQuantity in
+                    viewModel.fetchUpdateProductStock(with: product.id, to: newQuantity) {
+                        viewModel.resetPageAndFetch()
+                    }
+                }
+            )
+            .presentationDetents([.height(400)])
+            .presentationCornerRadius(24)
+            .frame(maxWidth: .infinity)
         }
         .alertRistock(
             isPresented: $isLogoutAlertPresented,
@@ -180,9 +231,8 @@ struct ProductStockView: View {
                 ProductRowSkeleton().cornerRadius(8)
                 ProductRowSkeleton().cornerRadius(8)
             } else {
-                StockInfoCardView(status: .now, count: viewModel.countCheckNow.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .soon, count: viewModel.countCheckSoon.updated, callback: selectCheckRecommendationFilter)
-                StockInfoCardView(status: .periodically, count: viewModel.countCheckPeriodically.updated, callback: selectCheckRecommendationFilter)
+                ProductInsightHeader(viewModel: viewModel)
+                    .modifier(CardBackgroundModifier())
             }
         }
         .padding(.horizontal)
@@ -198,21 +248,22 @@ struct ProductStockView: View {
                 ForEach(0..<10, id: \.self) {_ in
                     ProductRowSkeleton().cornerRadius(8)
                 }
+                .padding(.top, 40)
                 .background(Token.white.swiftUIColor)
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
-                        ProductRow(
-                            index: index + 1,
-                            product: $viewModel.products[index],
-                            isPopoverPresented: bindingForPopoverState(of: viewModel.products[index].id)
-                        )
+                        // TODO: Perlu disamain isi parameter dan adjust di file lain
+                        ProductRow(index: index + 1, product: $viewModel.products[index], onAddTap: {
+                            self.selectedProductForStockUpdate = viewModel.products[index]
+                            self.showInputSheet = true
+                        })
                         .onAppear {
-                            let thresholdIndex = max(viewModel.products.count - 5, 0)
-                            if index >= thresholdIndex {
-                                viewModel.loadNextPage()
-                            }
-                        }
+                           let thresholdIndex = max(viewModel.products.count - 5, 0)
+                           if index >= thresholdIndex {
+                               viewModel.loadNextPage()
+                           }
+                       }
                     }
                     
                     if viewModel.isLoading {
@@ -221,10 +272,11 @@ struct ProductStockView: View {
                     
                     Spacer().frame(height: 20)
                 }
-                .background(Token.white.swiftUIColor)
+                .padding(.top, 40)
+                .background(Token.whiteF7.swiftUIColor)
             }
         }
-        .background(Token.white.swiftUIColor)
+        .background(Token.whiteF7.swiftUIColor)
         .scrollIndicators(.hidden)
         .padding(.horizontal)
         .padding(.top, 5)
@@ -370,7 +422,7 @@ private struct StockStatusOverlay: View {
 #Preview("Loading State") {
     let mockViewModel = ProductStockViewModel(
         pipelineFetcher: PipelineFetcher(),
-        deviceId: "e2eb2658-3a31-4566-b2a9-7b77c1352fc8"
+        deviceId: "00000000-0000-0000-0000-000000000000"
     )
     mockViewModel.isLoading = true
     

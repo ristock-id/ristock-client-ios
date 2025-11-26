@@ -26,6 +26,12 @@ protocol PipelineFetcherProtocol: AnyObject {
         completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
     )
     
+    func updateProductStock(
+        clientID: String,
+        request: UpdateProductStockRequest,
+        completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
+    )
+    
     func getCheckRecommendationSummary(
         clientID: String,
         completion: @escaping (Result<SuccessResponse<CheckRecommendationSummaryResponse>, NetworkServiceError>) -> Void
@@ -41,6 +47,7 @@ protocol PipelineFetcherProtocol: AnyObject {
         startDate: Date?,
         endDate: Date?,
         isChecked: Bool?,
+        stockAmount: StockAmount?,
         completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
     )
     
@@ -152,6 +159,21 @@ final class PipelineFetcher: PipelineFetcherProtocol {
             completion(self.normalizePipelineResult(result))
         }
     }
+    
+    func updateProductStock(
+        clientID: String = "",
+        request: UpdateProductStockRequest,
+        completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
+    ) {
+        networkService.request(
+            urlString: PipelineEndpoint.updateProductStock.urlString,
+            method: .post,
+            parameters: [:],
+            headers: ["Client-Id": clientID],
+            body: request,
+            completion: completion
+        )
+    }
 
     func getProductsSummary(
         clientID: String = "",
@@ -163,6 +185,7 @@ final class PipelineFetcher: PipelineFetcherProtocol {
         startDate: Date? = nil,
         endDate: Date? = nil,
         isChecked: Bool? = nil,
+        stockAmount: StockAmount?,
         completion: @escaping (Result<ProductSummaryResponse, NetworkServiceError>) -> Void
     ) {
 
@@ -196,6 +219,10 @@ final class PipelineFetcher: PipelineFetcherProtocol {
             parameters["is_checked"] = isChecked
         }
         
+        if let stockAmount = stockAmount {
+            parameters["stock_amount"] = stockAmount.filterString
+        }
+
         networkService.request(
             urlString: PipelineEndpoint.getProductsSummary.urlString,
             method: .get,
