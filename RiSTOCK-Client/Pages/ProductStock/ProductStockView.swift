@@ -188,9 +188,11 @@ struct ProductStockView: View {
                     isPresented: $showInputSheet,
                     initialStock: product.stockAmount ?? 0,
                     productName: product.name,
-                    onSave: { _ in 
-                    }
-                )
+                    onSave: { newQuantity in
+                                    viewModel.fetchUpdateProductStock(with: product.id, to: newQuantity) {
+                                        viewModel.resetPageAndFetch()
+                                    }
+                                }                )
                 .presentationDetents([.height(400)])
                 .presentationCornerRadius(24)
                 .frame(maxWidth: .infinity)
