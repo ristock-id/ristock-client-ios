@@ -13,6 +13,7 @@ struct SearchAndFilter: View {
     // MARK: Properties Binding
     @Binding var searchText: String
     @Binding var isChecked: Bool?
+    @Binding var selectedStockStatusFilter: Set<StockStatus>
     
     @FocusState.Binding var isSearchFieldFocused: Bool
     
@@ -21,11 +22,13 @@ struct SearchAndFilter: View {
         didSet {
             if isFilterPresented {
                 isCheckedForFilter = isChecked
+                selectedStockStatusForFilter = selectedStockStatusFilter
             }
         }
     }
     
     @State private var isCheckedForFilter: Bool? = nil
+    @State private var selectedStockStatusForFilter: Set<StockStatus> = []
     
     @State private var showTrailingButton = true
     
@@ -82,9 +85,9 @@ struct SearchAndFilter: View {
                         filterButtonIsTapped()
                     } label: {
                         Image(systemName: "slider.horizontal.3")
-                            .foregroundColor(isChecked == nil ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
+                            .foregroundColor(isChecked == nil  && selectedStockStatusFilter.isEmpty ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
                             .frame(width: 40, height: 40)
-                            .background(isChecked == nil ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
+                            .background(isChecked == nil && selectedStockStatusFilter.isEmpty ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
@@ -97,7 +100,7 @@ struct SearchAndFilter: View {
         .background(Color.white)
         .sheet(isPresented: $isFilterPresented) {
             filterSheet()
-                .presentationDetents([.fraction(0.4)])
+                .presentationDetents([.fraction(0.6)])
         }
         .onChange(of: isSearchFieldFocused) { _, focused in
             if focused {
@@ -141,11 +144,14 @@ struct SearchAndFilter: View {
     func filterSheetButtonRemoveFilterTapped() {
         isChecked = nil
         isCheckedForFilter = nil
+        selectedStockStatusFilter = []
+        selectedStockStatusForFilter = []
         isFilterPresented = false
     }
     
     func filterSheetButtonApplyFilterTapped() {
         isChecked = isCheckedForFilter
+        selectedStockStatusFilter = selectedStockStatusForFilter
         isFilterPresented = false
     }
     
@@ -160,10 +166,6 @@ struct SearchAndFilter: View {
                     .frame(width: 40, height: 5)
                     .background(Color(.systemGray5))
                     .cornerRadius(2.5)
-
-                Text("Filter Cek Stok")
-                    .font(.customFont(size: 18, weight: .semibold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal)
             .padding(.top, 10)
@@ -172,27 +174,54 @@ struct SearchAndFilter: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     
-                    Text("Status Cek")
+                    Text("Input Stok")
                         .font(.customFont(size: 15, weight: .semibold))
                         .padding(.top, 8)
                         .foregroundColor(.primary)
                     
                     VStack(spacing: 0) {
                     
-                        StatusOptionRow(
-                            name: "Perlu di cek",
-                            statusValue: false,
-                            selectedStatus: $isCheckedForFilter
+                        StockInputOptionRow(
+                            name: "Sudah input stok",
+                            inputStatusValue: true,
+                            selectedStockInputStatus: $isCheckedForFilter
                         )
                         
-                        StatusOptionRow(
-                            name: "Sudah di cek",
-                            statusValue: true,
-                            selectedStatus: $isCheckedForFilter
+                        StockInputOptionRow(
+                            name: "Perlu input stok",
+                            inputStatusValue: false,
+                            selectedStockInputStatus: $isCheckedForFilter
                         )
+                        
                     }
                     
-                    Spacer()
+                    Text("Status Stok")
+                        .font(.customFont(size: 15, weight: .semibold))
+                        .padding(.top, 8)
+                        .foregroundColor(.primary)
+                    
+                    VStack(spacing: 0) {
+                    
+                        StockStatusOptionRow(
+                            name: "Aman",
+                            statusStock: StockStatus.safe,
+                            selectedStockStatusSet: $selectedStockStatusForFilter
+                        )
+                        
+                        StockStatusOptionRow(
+                            name: "Menipis",
+                            statusStock: StockStatus.low,
+                            selectedStockStatusSet: $selectedStockStatusForFilter
+                        )
+                        
+                        StockStatusOptionRow(
+                            name: "Habis",
+                            statusStock: StockStatus.out,
+                            selectedStockStatusSet: $selectedStockStatusForFilter
+                        )
+                        
+                    }
+                    
                 }
                 .padding(.horizontal)
             }
@@ -230,21 +259,21 @@ struct SearchAndFilter: View {
 }
 
 // MARK: - Status Option Row for Filter Sheet
-struct StatusOptionRow: View {
+struct StockInputOptionRow: View {
     let name: String
-    let statusValue: Bool
+    let inputStatusValue: Bool
     
-    @Binding var selectedStatus: Bool?
+    @Binding var selectedStockInputStatus: Bool?
     
     var isSelected: Bool {
-        selectedStatus == statusValue
+        selectedStockInputStatus == inputStatusValue
     }
     
     func optionIsTapped() {
         if isSelected {
-            selectedStatus = nil
+            selectedStockInputStatus = nil
         } else {
-            selectedStatus = statusValue
+            selectedStockInputStatus = inputStatusValue
         }
     }
     
@@ -259,7 +288,53 @@ struct StatusOptionRow: View {
                 
                 Spacer()
                 
-                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                Image(uiImage: isSelected ? RiSTOCKIcon.circleFill.image : RiSTOCKIcon.circleEmpty.image)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .foregroundColor(isSelected ? .blue : Color(.systemGray3))
+            }
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Status Option Row for Filter Sheet
+struct StockStatusOptionRow: View {
+    let name: String
+    let statusStock: StockStatus?
+
+    @Binding var selectedStockStatusSet: Set<StockStatus>
+
+    var isSelected: Bool {
+        guard let status = statusStock else { return false }
+        return selectedStockStatusSet.contains(status)
+    }
+    
+    func optionIsTapped() {
+        guard let status = statusStock else { return }
+        
+        if isSelected {
+            selectedStockStatusSet.remove(status)
+        } else {
+            selectedStockStatusSet.insert(status)
+        }
+    }
+    
+    var body: some View {
+        Button {
+            optionIsTapped()
+        } label: {
+            HStack {
+                Text(name)
+                    .font(.customFont(size: 13, weight: .regular))
+                    .foregroundColor(Token.black.swiftUIColor)
+                
+                Spacer()
+                
+                Image(uiImage: isSelected ? RiSTOCKIcon.checkActive.image : RiSTOCKIcon.checkInactive.image)
+                    .resizable()
+                    .frame(width: 20, height: 20)
                     .foregroundColor(isSelected ? .blue : Color(.systemGray3))
             }
         }
@@ -277,6 +352,7 @@ struct SearchAndFilter_PreviewContainer: View {
         SearchAndFilter(
             searchText: $text,
             isChecked: .constant(nil),
+            selectedStockStatusFilter: .constant([]),
             isSearchFieldFocused: $isFocused
         )
         
