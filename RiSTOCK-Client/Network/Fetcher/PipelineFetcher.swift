@@ -26,6 +26,12 @@ protocol PipelineFetcherProtocol: AnyObject {
         completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
     )
     
+    func updateProductStock(
+        clientID: String,
+        request: UpdateProductStockRequest,
+        completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
+    )
+    
     func getCheckRecommendationSummary(
         clientID: String,
         completion: @escaping (Result<SuccessResponse<CheckRecommendationSummaryResponse>, NetworkServiceError>) -> Void
@@ -151,6 +157,21 @@ final class PipelineFetcher: PipelineFetcherProtocol {
         ) { result in
             completion(self.normalizePipelineResult(result))
         }
+    }
+    
+    func updateProductStock(
+        clientID: String = "",
+        request: UpdateProductStockRequest,
+        completion: @escaping (Result<SuccessResponse<UpdateProductStatusResponse>, NetworkServiceError>) -> Void
+    ) {
+        networkService.request(
+            urlString: PipelineEndpoint.updateProductStock.urlString,
+            method: .post,
+            parameters: [:],
+            headers: ["Client-Id": clientID],
+            body: request,
+            completion: completion
+        )
     }
 
     func getProductsSummary(

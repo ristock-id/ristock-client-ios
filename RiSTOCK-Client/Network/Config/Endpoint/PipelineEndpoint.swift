@@ -15,6 +15,7 @@ enum PipelineEndpoint: EndpointProtocol {
     
     case getProductsSummary
     case getProductDetail
+    case updateProductStock
     
     var path: String {
         switch self {
@@ -30,6 +31,8 @@ enum PipelineEndpoint: EndpointProtocol {
             return "/recent-updated/summary"
         case .getProductDetail:
             return "/recent-updated/detail"
+        case .updateProductStock:
+            return "/update-stock-count"
         }
     }
 }

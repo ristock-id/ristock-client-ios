@@ -382,4 +382,26 @@ extension ProductStockViewModel {
             }
         }
     }
+    
+    @MainActor
+    func fetchUpdateProductStock(with productId: String, to quantity: Int, callback: @escaping(() -> Void)) {
+        let request: UpdateProductStockRequest = UpdateProductStockRequest(productId: productId, quantity: quantity)
+        
+        pipelineFetcher.updateProductStock(clientID: self.deviceId, request: request) { [weak self] result in
+            
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                callback()
+                switch result {
+                case .success(_):
+                    if let index = self.products.firstIndex(where: { $0.id == productId }) {
+                        self.products[index].updatedAt = Date()
+                    }
+                case .failure(let error):
+                    print("Failed to update stock status: ", error)
+                }
+            }
+        }
+    }
 }
