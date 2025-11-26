@@ -182,21 +182,23 @@ struct ProductStockView: View {
         .overlayPreferenceValue(ProductRowFramePreferenceKey.self) { preferences in
             overlayContent(preferences: preferences)
         }
-        .sheet(isPresented: $showInputSheet) {
-            if let product = selectedProductForStockUpdate {
-                InputStockSheet(
-                    isPresented: $showInputSheet,
-                    initialStock: product.stockAmount ?? 0,
-                    productName: product.name,
-                    onSave: { newQuantity in
-                                    viewModel.fetchUpdateProductStock(with: product.id, to: newQuantity) {
-                                        viewModel.resetPageAndFetch()
-                                    }
-                                }                )
-                .presentationDetents([.height(400)])
-                .presentationCornerRadius(24)
-                .frame(maxWidth: .infinity)
-            }
+        .sheet(item: $selectedProductForStockUpdate) { product in
+            InputStockSheet(
+                isPresented: Binding(
+                    get: { selectedProductForStockUpdate != nil },
+                    set: { if !$0 { selectedProductForStockUpdate = nil } }
+                ),
+                initialStock: product.stockAmount ?? 0,
+                productName: product.name,
+                onSave: { newQuantity in
+                    viewModel.fetchUpdateProductStock(with: product.id, to: newQuantity) {
+                        viewModel.resetPageAndFetch()
+                    }
+                }
+            )
+            .presentationDetents([.height(400)])
+            .presentationCornerRadius(24)
+            .frame(maxWidth: .infinity)
         }
         .alertRistock(
             isPresented: $isLogoutAlertPresented,
