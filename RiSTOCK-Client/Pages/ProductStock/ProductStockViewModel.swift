@@ -39,6 +39,10 @@ class ProductStockViewModel: ObservableObject {
     
     // MARK: - Filters
     // These properties now trigger a new API call.
+    @Published var selectedStockAmountFilter: Bool? = nil {
+        didSet { resetPageAndFetch() }
+    }
+    
     @Published var selectedCheckRecommendationFilter: Set<CheckRecommendationStatus> = [] {
         didSet { resetPageAndFetch() }
     }
@@ -212,7 +216,8 @@ extension ProductStockViewModel {
             checkRecommendationStatus: self.selectedCheckRecommendationFilter,
             startDate: self.startDateFilter,
             endDate: self.endDateFilter,
-            isChecked: self.isChecked
+            isChecked: self.isChecked,
+            stockAmount: self.selectedStockAmountFilter == true ? .inputted : self.selectedStockAmountFilter == nil ? nil :.notInputted
         ) { [weak self] result in
             guard let self = self else { return }
             

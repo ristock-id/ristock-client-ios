@@ -30,5 +30,19 @@ enum ProductPlatform: String, CaseIterable {
     case tiktok, lazada, shopee
 }
 
+enum StockAmount: String, CaseIterable, Hashable, Equatable {
+    case inputted = "Sudah input stok"
+    case notInputted = "Perlu input stok"
+    
+    var filterString: String {
+        switch self {
+        case .inputted:
+            return "not_null"
+        case .notInputted:
+            return "null"
+        }
+    }
+}
+
 extension SalesCondition: Hashable {}
 extension SalesCondition: Equatable {}

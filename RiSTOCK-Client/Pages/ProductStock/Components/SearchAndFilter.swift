@@ -27,7 +27,7 @@ struct SearchAndFilter: View {
         }
     }
     
-    @State private var isCheckedForFilter: Bool? = nil
+    @Binding var isCheckedForFilter: Bool?
     @State private var selectedStockStatusForFilter: Set<StockStatus> = []
     
     @State private var showTrailingButton = true
@@ -353,7 +353,8 @@ struct SearchAndFilter_PreviewContainer: View {
             searchText: $text,
             isChecked: .constant(nil),
             selectedStockStatusFilter: .constant([]),
-            isSearchFieldFocused: $isFocused
+            isSearchFieldFocused: $isFocused,
+            isCheckedForFilter: .constant(nil)
         )
         
         Spacer()

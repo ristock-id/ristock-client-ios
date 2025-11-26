@@ -142,10 +142,11 @@ struct ProductStockView: View {
                     searchText: $viewModel.searchText,
                     isChecked: $viewModel.isChecked,
                     selectedStockStatusFilter: $viewModel.selectedStockStatusFilter,
-                    isSearchFieldFocused: $isSearchFieldFocused
+                    isSearchFieldFocused: $isSearchFieldFocused,
+                    isCheckedForFilter: $viewModel.selectedStockAmountFilter
                 )
                 .zIndex(1)
-                .offset(y: 30)
+                .offset(y: 30) 
                 .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
                 
                 productListSection()
