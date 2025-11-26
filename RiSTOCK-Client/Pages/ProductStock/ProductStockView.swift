@@ -257,24 +257,12 @@ struct ProductStockView: View {
                             self.selectedProductForStockUpdate = viewModel.products[index]
                             self.showInputSheet = true
                         })
-//                        ProductRow(
-//                            index: index + 1,
-//                            product: $viewModel.products[index],
-                            //stockAmount: nil or Int
-                            //minStock: ambil dari backend
-                            //stockStatus:
-                            //priority: ambil dari backend
-                            
-                            // Logic card diclick
-//                            onAddTap: {
-//                                // Kondisi stok kosong
-//                                if product.stockAmount == nil {
-//                                    // Sheet input stok
-//                                } else {
-//                                    // Sheet update stok
-//                                }
-//                            }
-//                        )
+                        .onAppear {
+                           let thresholdIndex = max(viewModel.products.count - 5, 0)
+                           if index >= thresholdIndex {
+                               viewModel.loadNextPage()
+                           }
+                       }
                     }
                     
                     if viewModel.isLoading {
@@ -433,7 +421,7 @@ private struct StockStatusOverlay: View {
 #Preview("Loading State") {
     let mockViewModel = ProductStockViewModel(
         pipelineFetcher: PipelineFetcher(),
-        deviceId: "e2eb2658-3a31-4566-b2a9-7b77c1352fc8"
+        deviceId: "00000000-0000-0000-0000-000000000000"
     )
     mockViewModel.isLoading = true
     
