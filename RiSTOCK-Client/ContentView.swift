@@ -13,7 +13,29 @@ import Photos
 struct ContentView: View {
 
     // e2eb2658-3a31-4566-b2a9-7b77c1352fc8
-    @AppStorage("clientId") private var clientId: String = ""
+    @AppStorage("clientId") private var clientId: String = "" {
+        didSet {
+            
+            if clientId == "" { return }
+            
+            if let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") {
+                let notificationFetcher: NotificationFetcherProtocol = NotificationFetcher()
+
+                notificationFetcher.updateDeviceToken(
+                    clientID: clientId,
+                    deviceToken: deviceToken
+                ) { result in
+                    switch result {
+                    case .success:
+                        print("Device token updated successfully.")
+                    case .failure(let error):
+                        print("Failed to update device token: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+    
     @State private var isPresentingScanner = false
     @State private var isPresentingGallery = false
     @State private var isProcessingImage = false
@@ -44,7 +66,7 @@ struct ContentView: View {
     @State private var showConnectionErrorModal = false
     
     var body: some View {
-        if !clientId.isEmpty {
+        if clientId != "" {
             // Placeholder untuk View Produk
             ProductStockView(viewModel: ProductStockViewModel(deviceId: clientId))
         } else {

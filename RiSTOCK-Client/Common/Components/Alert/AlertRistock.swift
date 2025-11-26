@@ -18,6 +18,23 @@ struct AlertRistock: ViewModifier {
     let onCancelText: String = "Cancel"
     let onCancel: () -> Void
     
+    // Added explicit initializer to align with modifier usage
+    init(
+        isPresented: Binding<Bool>,
+        title: String,
+        message: String,
+        image: Image? = nil,
+        onConfirm: @escaping () -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self._isPresented = isPresented
+        self.title = title
+        self.message = message
+        self.image = image
+        self.onConfirm = onConfirm
+        self.onCancel = onCancel
+    }
+    
     func body(content: Content) -> some View {
         ZStack {
             content

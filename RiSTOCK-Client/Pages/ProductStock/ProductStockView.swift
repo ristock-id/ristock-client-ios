@@ -141,6 +141,7 @@ struct ProductStockView: View {
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
                     isChecked: $viewModel.isChecked,
+                    selectedStockStatusFilter: $viewModel.selectedStockStatusFilter,
                     isSearchFieldFocused: $isSearchFieldFocused
                 )
                 .zIndex(1)
