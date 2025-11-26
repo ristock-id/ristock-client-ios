@@ -65,7 +65,7 @@ struct SearchAndFilter: View {
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
-            .background(Token.gray50.swiftUIColor)
+            .background(Token.gray0.swiftUIColor)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: isSearchFieldFocused)
             .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: showTrailingButton)
@@ -97,7 +97,7 @@ struct SearchAndFilter: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color.white)
+        .background(Color.clear)
         .sheet(isPresented: $isFilterPresented) {
             filterSheet()
                 .presentationDetents([.fraction(0.6)])
