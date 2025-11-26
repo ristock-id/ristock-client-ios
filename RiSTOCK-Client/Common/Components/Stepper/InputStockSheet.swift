@@ -212,6 +212,7 @@ struct InputStockSheet: View {
         .onDisappear {
             stopTimer()
         }
+        .background(Token.white.swiftUIColor)
     }
     
     private func increment(by amount: Int) {
