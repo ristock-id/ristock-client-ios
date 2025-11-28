@@ -105,7 +105,7 @@ struct ProductStockView: View {
     @State private var selectedProductForStockUpdate: ProductSummaryUI?
     
     var body: some View {
-        let showLandingState = !isSearchFieldFocused
+        let showLandingState = !isSearchFieldFocused && viewModel.searchText.isEmpty
         
         Group {
             VStack(spacing: 0) {

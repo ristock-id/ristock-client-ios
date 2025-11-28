@@ -70,29 +70,27 @@ struct SearchAndFilter: View {
             .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: isSearchFieldFocused)
             .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: showTrailingButton)
 
-            if showTrailingButton {
-                if isSearchFieldFocused {
-                    Button {
-                        cancelSearchIsTapped()
-                    } label: {
-                        Text("Cancel")
-                            .font(.customFont(size: 13, weight: .medium))
-                            .foregroundColor(Token.gray500.swiftUIColor)
-                    }
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                } else {
-                    Button {
-                        filterButtonIsTapped()
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .foregroundColor(isChecked == nil  && selectedStockStatusFilter.isEmpty ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
-                            .frame(width: 40, height: 40)
-                            .background(isChecked == nil && selectedStockStatusFilter.isEmpty ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            if isSearchFieldFocused || !searchText.isEmpty {
+                Button {
+                    cancelSearchIsTapped()
+                } label: {
+                    Text("Cancel")
+                        .font(.customFont(size: 13, weight: .medium))
+                        .foregroundColor(Token.gray500.swiftUIColor)
                 }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else {
+                Button {
+                    filterButtonIsTapped()
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .foregroundColor(isChecked == nil  && selectedStockStatusFilter.isEmpty ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
+                        .frame(width: 40, height: 40)
+                        .background(isChecked == nil && selectedStockStatusFilter.isEmpty ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .padding(.horizontal)
@@ -103,10 +101,10 @@ struct SearchAndFilter: View {
                 .presentationDetents([.fraction(0.6)])
         }
         .onChange(of: isSearchFieldFocused) { _, focused in
-            if focused {
+            if focused  {
                 // Step 1: expand immediately
                 withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
-                    showTrailingButton = false
+                    showTrailingButton = true
                 }
                 // Step 2: show Cancel slightly after (staged)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
@@ -130,6 +128,7 @@ struct SearchAndFilter: View {
     
     // MARK: Action Functions
     func cancelSearchIsTapped() {
+        searchText = ""
         isSearchFieldFocused = false
     }
     
