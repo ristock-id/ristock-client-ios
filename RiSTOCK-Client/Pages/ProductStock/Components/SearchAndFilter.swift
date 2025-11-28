@@ -12,8 +12,8 @@ import SwiftUI
 struct SearchAndFilter: View {
     // MARK: Properties Binding
     @Binding var searchText: String
-    @Binding var isChecked: Bool?
     @Binding var selectedStockStatusFilter: Set<StockStatus>
+    @Binding var selectedStockAmountFilter: Bool?
     
     @FocusState.Binding var isSearchFieldFocused: Bool
     
@@ -21,13 +21,14 @@ struct SearchAndFilter: View {
     @State private var isFilterPresented: Bool = false {
         didSet {
             if isFilterPresented {
-                isCheckedForFilter = isChecked
                 selectedStockStatusForFilter = selectedStockStatusFilter
+                selectedStockAmountForFilter = selectedStockAmountFilter
             }
         }
     }
     
-    @Binding var isCheckedForFilter: Bool?
+    @State var selectedStockAmountForFilter: Bool?
+    
     @State private var selectedStockStatusForFilter: Set<StockStatus> = []
     
     @State private var showTrailingButton = true
@@ -84,9 +85,9 @@ struct SearchAndFilter: View {
                     filterButtonIsTapped()
                 } label: {
                     Image(systemName: "slider.horizontal.3")
-                        .foregroundColor(isChecked == nil  && selectedStockStatusFilter.isEmpty ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
+                        .foregroundColor(selectedStockAmountFilter == nil  && selectedStockStatusFilter.isEmpty ? Token.gray500.swiftUIColor : Token.primary50.swiftUIColor)
                         .frame(width: 40, height: 40)
-                        .background(isChecked == nil && selectedStockStatusFilter.isEmpty ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
+                        .background(selectedStockAmountFilter == nil && selectedStockStatusFilter.isEmpty ? Token.gray50.swiftUIColor: Token.primary500.swiftUIColor)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
@@ -141,15 +142,14 @@ struct SearchAndFilter: View {
     }
     
     func filterSheetButtonRemoveFilterTapped() {
-        isChecked = nil
-        isCheckedForFilter = nil
+        selectedStockAmountFilter = nil
         selectedStockStatusFilter = []
         selectedStockStatusForFilter = []
         isFilterPresented = false
     }
     
     func filterSheetButtonApplyFilterTapped() {
-        isChecked = isCheckedForFilter
+        selectedStockAmountFilter = selectedStockAmountForFilter
         selectedStockStatusFilter = selectedStockStatusForFilter
         isFilterPresented = false
     }
@@ -183,13 +183,13 @@ struct SearchAndFilter: View {
                         StockInputOptionRow(
                             name: "Sudah input stok",
                             inputStatusValue: true,
-                            selectedStockInputStatus: $isCheckedForFilter
+                            selectedStockInputStatus: $selectedStockAmountForFilter
                         )
                         
                         StockInputOptionRow(
                             name: "Perlu input stok",
                             inputStatusValue: false,
-                            selectedStockInputStatus: $isCheckedForFilter
+                            selectedStockInputStatus: $selectedStockAmountForFilter
                         )
                         
                     }
@@ -350,10 +350,9 @@ struct SearchAndFilter_PreviewContainer: View {
     var body: some View {
         SearchAndFilter(
             searchText: $text,
-            isChecked: .constant(nil),
             selectedStockStatusFilter: .constant([]),
+            selectedStockAmountFilter: .constant(nil),
             isSearchFieldFocused: $isFocused,
-            isCheckedForFilter: .constant(nil)
         )
         
         Spacer()

@@ -140,10 +140,9 @@ struct ProductStockView: View {
             
                 SearchAndFilter(
                     searchText: $viewModel.searchText,
-                    isChecked: $viewModel.isChecked,
                     selectedStockStatusFilter: $viewModel.selectedStockStatusFilter,
+                    selectedStockAmountFilter: $viewModel.selectedStockAmountFilter,
                     isSearchFieldFocused: $isSearchFieldFocused,
-                    isCheckedForFilter: $viewModel.selectedStockAmountFilter
                 )
                 .zIndex(1)
                 .offset(y: 30) 
@@ -245,11 +244,14 @@ struct ProductStockView: View {
     private func productListSection() -> some View {
         ScrollView {
             if viewModel.products.isEmpty && viewModel.isLoading {
-                ForEach(0..<10, id: \.self) {_ in
-                    ProductRowSkeleton().cornerRadius(8)
+                LazyVStack {
+                    ForEach(0..<10, id: \.self) {_ in
+                        ProductRowSkeleton().cornerRadius(8)
+                    }
+                    .padding(.top, 10)
+                    .background(Token.whiteF7.swiftUIColor)
                 }
                 .padding(.top, 40)
-                .background(Token.white.swiftUIColor)
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.products.indices, id: \.self) { index in
